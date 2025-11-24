@@ -1,0 +1,30 @@
+audio:
+  enabled: true
+  volume: 1.0
+  rate: 150
+
+navigation:
+  stop_distance: 0.8
+  warning_distance: 2.0
+
+dataset:
+  classes:
+    0: bed
+    1: sofa
+    2: chair
+    3: table
+    4: lamp
+    5: tv
+    6: laptop
+    7: wardrobe
+    8: window
+    9: door
+    10: potted plant
+    11: photo frame
+    12: person
+    13: stairs
+    14: trash_can
+    15: shoe
+    16: cabinet
+    17: shelf
+    18: refrigerator

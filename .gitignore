@@ -1,0 +1,17 @@
+.vscode/
+.idea/
+datasets/
+output/
+runs/
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+# Datasets and Large Files
+datasets/
+output/
+runs/
+*.pt
