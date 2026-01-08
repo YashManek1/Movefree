@@ -1,32 +1,25 @@
-"""
-MoveFree Ultimate Indoor Navigation System
-Human Autopilot Mode - Your Eyes, Your Freedom
-
-FIXED: Uses YOLOv8n COCO (80 classes) for comprehensive detection
-- Microphone high sensitivity (energy_threshold=800)
-- Confidence threshold raised to 0.45 (fewer false positives)
-- Proper COCO class mapping (person=0, bed=59, chair=56, etc.)
-"""
-
 import cv2
 import time
 import logging
 import numpy as np
+import os
+import threading
 from pathlib import Path
 from dotenv import load_dotenv
-import os
+import yaml
+from flask import Flask, Response
 
-# Import custom modules
+# --- IMPORT CUSTOM MODULES ---
 from src.inference.audio_feedback import AudioFeedback
 from src.inference.estimator import AdvancedDistanceEstimator
 from src.inference.navigator import ZoneBasedNavigator, Detection
 from src.inference.conversational_ai import ConversationalAI
 from src.utils.stream_loader import StreamLoader
+from src.hardware_manager import HardwareManager
 
-# YOLO
+# --- IMPORT AI ENGINES ---
 from ultralytics import YOLO
 
-# Gemini
 try:
     import google.generativeai as genai
     from PIL import Image
@@ -35,734 +28,485 @@ try:
 except ImportError:
     GEMINI_AVAILABLE = False
 
-# Setup logging
+# --- CONFIGURATION ---
+load_dotenv()
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
+# Silence noisy libraries
+logging.getLogger("werkzeug").setLevel(logging.WARNING)
+logging.getLogger("ultralytics").setLevel(logging.WARNING)
+
 logger = logging.getLogger("MoveFree")
 
-# Load environment
-load_dotenv()
+# --- LIVESTREAMING SERVER ---
+app = Flask(__name__)
+frame_buffer = None
+buffer_lock = threading.Lock()
 
 
-class MoveFreeUltimateSystem:
-    """
-    Complete MoveFree Indoor Navigation System
-    Uses YOLOv8n COCO (80 classes) for comprehensive object detection
-    """
+@app.route("/video_feed")
+def video_feed():
+    """Video streaming route. Put this in the src tag of an img tag."""
 
-    def __init__(
-        self,
-        video_source: str = "0",
-        model_path: str = "yolov8n.pt",  # Generic COCO model
-        mic_index: int = None,
-    ):
+    def generate():
+        while True:
+            with buffer_lock:
+                if frame_buffer is None:
+                    time.sleep(0.1)
+                    continue
+                ret, encoded = cv2.imencode(".jpg", frame_buffer)
+            if not ret:
+                continue
+            yield (
+                b"--frame\r\n"
+                b"Content-Type: image/jpeg\r\n\r\n" + encoded.tobytes() + b"\r\n"
+            )
+
+    return Response(generate(), mimetype="multipart/x-mixed-replace; boundary=frame")
+
+
+def start_stream_server():
+    """Starts Flask server on port 5000 in a daemon thread"""
+    try:
+        app.run(host="0.0.0.0", port=5000, debug=False, use_reloader=False)
+    except Exception as e:
+        logger.error(f"Stream Server Failed: {e}")
+
+
+# --- MAIN SYSTEM CLASS ---
+class MoveFreeIndoorSystem:
+    def __init__(self, video_source="0", mic_index=None):
         self.video_source = video_source
-        self.model_path = model_path
         self.running = False
         self.current_frame = None
 
         logger.info("=" * 60)
-        logger.info("🚀 MoveFree Ultimate - Human Autopilot Mode")
+        logger.info("🚀 MoveFree Ultimate - Indoor Autopilot (Optimized)")
         logger.info("=" * 60)
 
-        # Initialize components
-        logger.info("📦 Loading components...")
+        # 1. Initialize Hardware (Sensors & Haptics)
+        self.hw = HardwareManager()
 
-        # 1. Audio Feedback
+        # 2. Audio System
         self.audio = AudioFeedback()
-        self.audio.speak("Initializing Move Free Ultimate System", priority=True)
+        self.audio.speak("Initializing System...", priority=True)
 
-        # 2. YOLO Model (Generic COCO)
-        logger.info("🔍 Loading YOLOv8n model...")
-        self.model = YOLO(model_path)
+        # 3. Load Config
+        self.config = {}
+        if os.path.exists("config/config.yaml"):
+            with open("config/config.yaml", "r") as f:
+                self.config = yaml.safe_load(f)
 
-        # COCO class names (80 classes)
+        # 4. AI Model - FORCING STANDARD YOLOv8n (Best for indoor robustness)
+        logger.info("🧠 Loading YOLOv8n (COCO)...")
+        self.model = YOLO("yolov8n.pt")
         self.class_names = self.model.names
-        logger.info(f"✅ Model loaded: {len(self.class_names)} COCO classes")
 
-        # Critical classes for indoor navigation (COCO IDs)
-        self.critical_classes = {
-            0: "person",  # COCO ID 0
-            56: "chair",  # COCO ID 56
-            57: "couch",  # COCO ID 57 (maps to "sofa")
-            58: "potted plant",  # COCO ID 58
-            59: "bed",  # COCO ID 59
-            60: "dining table",  # COCO ID 60
-            61: "toilet",  # COCO ID 61
-            62: "tv",  # COCO ID 62
-            63: "laptop",  # COCO ID 63
-            72: "refrigerator",  # COCO ID 72
-            73: "book",  # COCO ID 73
-            # Note: COCO doesn't have stairs, door, wardrobe, cabinet, shelf
-            # These require custom trained model
-        }
+        # Define Priority Classes
+        self.critical_classes = [
+            "person",
+            "chair",
+            "couch",
+            "bed",
+            "toilet",
+            "refrigerator",
+            "tv",
+        ]
 
-        # 3. Distance Estimator
+        # 5. Estimator & Navigator
         self.estimator = AdvancedDistanceEstimator(camera_height=1.5, focal_length=700)
+        self.navigator = None  # Initialized in run loop when frame size is known
+
+        # ** FIX: Initialize Calibration Variables **
         self.calibration_frames = 0
         self.max_calibration_frames = 60
+        self.estimator.calibrated = False
 
-        # 4. Navigator (will be initialized after first frame)
-        self.navigator = None
-
-        # 5. Conversational AI (FIXED: High sensitivity)
-        logger.info("🎤 Initializing voice assistant...")
+        # 6. Conversational AI
+        logger.info("🎤 Initializing Voice AI...")
         self.voice_ai = ConversationalAI(mic_index=mic_index)
         self._register_voice_commands()
 
-        # 6. Gemini
+        # 7. Gemini Vision AI
         self.gemini = None
         if GEMINI_AVAILABLE and os.getenv("GEMINI_API_KEY"):
             try:
                 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
                 self.gemini = genai.GenerativeModel("gemini-2.5-flash")
-                logger.info("✅ Gemini 2.5 Flash connected")
+                logger.info("✅ Gemini Connected")
             except Exception as e:
-                logger.warning(f"Gemini initialization failed: {e}")
+                logger.error(f"Gemini Error: {e}")
 
-        # State management
+        # 8. Start Livestream
+        threading.Thread(target=start_stream_server, daemon=True).start()
+        logger.info("📡 Livestream: http://<IP>:5000/video_feed")
+
+        # 9. State & Optimization Variables
         self.tracking_mode = None
         self.last_guidance_time = 0
-        self.guidance_interval = 3.0
-        self.frame_count = 0
+        self.guidance_interval = 2.0
+        self.last_light_warn = 0
 
-        # Performance monitoring
+        # FPS & Frame Skipping Logic
+        self.frame_count = 0
+        self.SKIP_FRAMES = 2  # Process 1 out of every 3 frames (Boosts FPS)
+        self.cached_detections = []
         self.fps = 0
         self.last_fps_time = time.time()
 
-        logger.info("✅ All components loaded")
-        self.audio.speak("System ready. Your AI eyes are active.", priority=True)
+        self.audio.speak("System Ready. Walking mode active.", priority=True)
 
     def _register_voice_commands(self):
-        """Register voice command callbacks"""
-        self.voice_ai.register_callback("stop", self._cmd_stop)
-        self.voice_ai.register_callback("find", self._cmd_find)
-        self.voice_ai.register_callback("describe", self._cmd_describe)
-        self.voice_ai.register_callback("read", self._cmd_read)
-        self.voice_ai.register_callback("navigate", self._cmd_navigate)
-        self.voice_ai.register_callback("calibrate", self._cmd_calibrate)
-        self.voice_ai.register_callback("help", self._cmd_help)
-        self.voice_ai.register_callback("distance", self._cmd_distance)
-        self.voice_ai.register_callback("exits", self._cmd_exits)
-        self.voice_ai.register_callback("hazards", self._cmd_hazards)
-        self.voice_ai.register_callback("summary", self._cmd_summary)
-        self.voice_ai.register_callback("count", self._cmd_count)
-        self.voice_ai.register_callback("people", self._cmd_people)
-        self.voice_ai.register_callback("identify", self._cmd_identify)
-        self.voice_ai.register_callback("color", self._cmd_color)
+        """Map voice commands to internal functions"""
+        cmds = {
+            "stop": self._cmd_stop,
+            "navigate": self._cmd_navigate,
+            "find": self._cmd_find,
+            "describe": self._cmd_describe,
+            "read": self._cmd_read,
+            "help": self._cmd_help,
+            "hazards": self._cmd_hazards,
+            "exits": self._cmd_exits,
+            "summary": self._cmd_summary,
+            "calibrate": self._cmd_calibrate,
+            "speak": lambda t, p=0: self.audio.speak(t, priority=p),
+        }
+        for keyword, func in cmds.items():
+            self.voice_ai.register_callback(keyword, func)
 
-        # Register speak callback for AI responses
-        self.voice_ai.register_callback(
-            "speak", lambda text, priority=0: self.audio.speak(text, priority=priority)
-        )
-
-    # === VOICE COMMAND HANDLERS ===
-
+    # --- VOICE HANDLERS ---
     def _cmd_stop(self):
-        """Handle 'stop' command"""
-        self.audio.speak("Stopped", priority=True)
+        self.audio.speak("Paused", priority=True)
         self.tracking_mode = None
 
-    def _cmd_find(self, target: str):
-        """Handle 'find X' command"""
-        target_normalized = target.lower().strip()
+    def _cmd_navigate(self):
+        self.tracking_mode = None
+        self.audio.speak("Resuming navigation", priority=True)
 
-        # Map common names to COCO classes
-        name_mapping = {
-            "person": "person",
-            "chair": "chair",
-            "couch": "couch",
+    def _cmd_find(self, target: str):
+        target = target.lower().strip()
+        # Common synonyms mapping
+        mapping = {
             "sofa": "couch",
-            "bed": "bed",
             "table": "dining table",
             "tv": "tv",
-            "laptop": "laptop",
-            "plant": "potted plant",
-            "refrigerator": "refrigerator",
             "fridge": "refrigerator",
-            "toilet": "toilet",
-            "book": "book",
+            "plant": "potted plant",
         }
+        target = mapping.get(target, target)
 
-        # Try to find mapped class
-        search_class = name_mapping.get(target_normalized, target_normalized)
-        valid_classes = list(self.class_names.values())
-
-        if search_class in valid_classes:
-            self.tracking_mode = search_class
-            self.audio.speak(f"Searching for {search_class}", priority=True)
-            logger.info(f"🎯 Tracking mode: {search_class}")
+        if target in self.class_names.values():
+            self.tracking_mode = target
+            self.audio.speak(f"Searching for {target}", priority=True)
         else:
-            self.audio.speak(
-                f"Sorry, I cannot detect {target_normalized}. Try person, chair, bed, or table.",
-                priority=True,
-            )
+            self.audio.speak(f"I cannot find {target} in my database.", priority=True)
 
     def _cmd_describe(self):
-        """Handle 'describe' command"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Description unavailable", priority=True)
-            return
-
-        self.audio.speak("Analyzing scene", priority=True)
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = """You are the eyes for a blind person. Describe this indoor scene concisely:
-                - Overall environment type (room, hallway, etc.)
-                - Key objects and their positions using clock positions (12 o'clock = straight ahead)
-                - Any potential hazards or obstacles
-                - Doors/exits if visible
-                - People if present
-                
-Keep it brief and practical for navigation. No asterisks."""
-
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    description = response.text.replace("*", "").replace("#", "")
-                    sentences = description.split(".")
-                    for sentence in sentences:
-                        clean_sent = sentence.strip()
-                        if len(clean_sent) > 5:
-                            self.audio.speak(clean_sent, priority=False)
-                else:
-                    self.audio.speak("Unable to analyze scene", priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-                self.audio.speak("Error analyzing scene", priority=True)
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
+        if self.gemini:
+            self.audio.speak("Analyzing scene...", priority=True)
+            self._run_gemini(
+                "Describe this room. Mention furniture, people (using clock positions), and exits. Be concise."
+            )
 
     def _cmd_read(self):
-        """Handle 'read' command"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Text reading unavailable", priority=True)
-            return
-
-        self.audio.speak("Reading text", priority=True)
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = "Read all visible text in this image clearly. List each text element. If no text, say 'No text visible'."
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text and "no text" not in response.text.lower():
-                    lines = response.text.split("\n")
-                    for line in lines:
-                        clean_line = line.strip().replace("*", "").replace("-", "")
-                        if len(clean_line) > 2:
-                            self.audio.speak(clean_line, priority=False)
-                else:
-                    self.audio.speak("No text detected", priority=False)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-                self.audio.speak("Error reading text", priority=True)
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
-
-    def _cmd_navigate(self):
-        """Handle 'navigate' / 'guide me' command"""
-        self.audio.speak("Providing navigation guidance", priority=True)
-        self.last_guidance_time = 0
-
-    def _cmd_calibrate(self):
-        """Handle 'calibrate' command"""
-        self.calibration_frames = 0
-        if self.estimator:
-            self.estimator.calibrated = False
-        self.audio.speak("Recalibrating distance estimation", priority=True)
-
-    def _cmd_help(self):
-        """Handle 'help' command"""
-        help_text = """Available commands: 
-        Say Stop to halt. 
-        Say Find person, Find chair, or Find bed to search for objects. 
-        Say Describe for scene analysis. 
-        Say Read to hear text. 
-        Say Any hazards to check for dangers.
-        Say How many people to count objects.
-        Say Give me a summary for quick overview."""
-
-        self.audio.speak(help_text, priority=True)
-
-    def _cmd_distance(self):
-        """Handle distance inquiry"""
-        self.audio.speak("Calculating distances to nearby objects", priority=True)
-
-    def _cmd_exits(self):
-        """Handle exit finding - uses Gemini since COCO doesn't have 'door'"""
         if self.gemini:
-            self._cmd_hazards()  # Gemini will identify exits
-        else:
-            self.audio.speak("Exit detection requires Gemini AI", priority=True)
+            self.audio.speak("Reading text...", priority=True)
+            self._run_gemini("Read all visible text in this image.")
 
     def _cmd_hazards(self):
-        """Handle hazard check"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Hazard detection unavailable", priority=True)
-            return
+        if self.gemini:
+            self.audio.speak("Checking safety...", priority=True)
+            self._run_gemini(
+                "Identify trip hazards, open cupboards, or stairs. If safe, say 'Area safe'."
+            )
 
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = """Analyze this scene for potential hazards for a blind person:
-                - Tripping hazards (stairs, objects on floor)
-                - Collision hazards (low-hanging objects, sharp corners)
-                - Moving hazards (people, doors)
-                - Exits and doors if visible
-                
-Be brief and clear. If safe, say "No immediate hazards detected"."""
-
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "")
-                    self.audio.speak(clean_text, priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
+    def _cmd_exits(self):
+        if self.gemini:
+            self.audio.speak("Locating exits...", priority=True)
+            self._run_gemini(
+                "Where are the doors or exits? Use clock positions (e.g., 'Door at 2 o'clock')."
+            )
 
     def _cmd_summary(self):
-        """Handle quick summary"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Summary unavailable", priority=True)
-            return
+        self._run_gemini("Give a 1-sentence summary of what is in front of me.")
 
+    def _cmd_calibrate(self):
+        self.calibration_frames = 0
+        self.estimator.calibrated = False
+        self.audio.speak("Recalibrating distance...", priority=True)
+
+    def _cmd_help(self):
+        self.audio.speak(
+            "Commands: Navigate, Stop, Find [Object], Describe, Read text, Hazards, Exits."
+        )
+
+    def _run_gemini(self, prompt):
+        """Runs Gemini in background thread"""
+        if self.current_frame is None:
+            return
         frame_copy = self.current_frame.copy()
 
-        def _task():
+        def task():
             try:
                 rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = "Give a 2-sentence summary of this scene for navigation. Focus on safety and next steps."
-                response = self.gemini.generate_content([prompt, pil_img])
-
+                response = self.gemini.generate_content([prompt, Image.fromarray(rgb)])
                 if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "")
-                    self.audio.speak(clean_text, priority=True)
-
+                    self.audio.speak(response.text.replace("*", ""))
             except Exception as e:
-                logger.error(f"Gemini error: {e}")
+                logger.error(f"Gemini Error: {e}")
+                self.audio.speak("AI Service Error.")
 
-        import threading
+        threading.Thread(target=task, daemon=True).start()
 
-        threading.Thread(target=_task, daemon=True).start()
+    # --- UTILS ---
+    def get_clock_direction(self, bbox, width):
+        """Returns string like '10 o'clock'"""
+        cx = (bbox[0] + bbox[2]) // 2
+        ratio = cx / width
+        if ratio < 0.2:
+            return "10 o'clock"
+        if ratio < 0.4:
+            return "11 o'clock"
+        if ratio < 0.6:
+            return "12 o'clock"
+        if ratio < 0.8:
+            return "1 o'clock"
+        return "2 o'clock"
 
-    def _cmd_count(self, target: str = None):
-        """Handle count command"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Counting unavailable", priority=True)
-            return
-
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                if target:
-                    prompt = f"Count the number of {target} in this image. Give just the number."
-                else:
-                    prompt = "Count people in this image. Give just the number."
-
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "").strip()
-                    self.audio.speak(clean_text, priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
-
-    def _cmd_people(self):
-        """Handle people detection"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("People detection unavailable", priority=True)
-            return
-
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = "Are there any people in this image? If yes, how many and where are they positioned using clock positions?"
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "").strip()
-                    self.audio.speak(clean_text, priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
-
-    def _cmd_identify(self):
-        """Handle object identification"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Identification unavailable", priority=True)
-            return
-
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = "What is the main object in the center of this image? Describe it briefly."
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "").strip()
-                    self.audio.speak(clean_text, priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
-
-    def _cmd_color(self):
-        """Handle color identification"""
-        if not self.gemini or self.current_frame is None:
-            self.audio.speak("Color detection unavailable", priority=True)
-            return
-
-        frame_copy = self.current_frame.copy()
-
-        def _task():
-            try:
-                rgb = cv2.cvtColor(frame_copy, cv2.COLOR_BGR2RGB)
-                pil_img = Image.fromarray(rgb)
-
-                prompt = (
-                    "What are the dominant colors in this scene? List them briefly."
-                )
-                response = self.gemini.generate_content([prompt, pil_img])
-
-                if response.text:
-                    clean_text = response.text.replace("*", "").replace("#", "").strip()
-                    self.audio.speak(clean_text, priority=True)
-
-            except Exception as e:
-                logger.error(f"Gemini error: {e}")
-
-        import threading
-
-        threading.Thread(target=_task, daemon=True).start()
-
-    # === MAIN PROCESSING LOOP ===
-
+    # --- MAIN LOOP ---
     def run(self):
-        """Main processing loop"""
-        # Initialize video stream
-        logger.info(f"📹 Connecting to video source: {self.video_source}")
+        logger.info(f"📹 Connecting to: {self.video_source}")
         stream = StreamLoader(self.video_source)
-
-        # Wait for connection
         time.sleep(2)
 
-        # Start voice assistant
         self.voice_ai.start_listening()
-
         self.running = True
-        self.audio.speak("Navigation system active. I am your eyes.", priority=True)
 
-        logger.info("🚀 Main loop started")
-        logger.info("Press Q to quit")
-
-        try:
-            while self.running:
-                # Get latest frame
-                frame = stream.read()
-
-                if frame is None:
-                    logger.warning("No frame received")
-                    time.sleep(0.1)
-                    continue
-
-                # Resize for consistent processing
-                frame = cv2.resize(frame, (640, 480))
-                self.current_frame = frame.copy()
-                h, w = frame.shape[:2]
-
-                # Update frame for voice AI
-                self.voice_ai.set_frame(frame)
-
-                # Initialize navigator
-                if self.navigator is None:
-                    self.navigator = ZoneBasedNavigator(w, h)
-                    logger.info("✅ Navigator initialized")
-
-                # Auto-calibration phase
-                if (
-                    not self.estimator.calibrated
-                    and self.calibration_frames < self.max_calibration_frames
-                ):
-                    self.calibration_frames += 1
-
-                # Process frame
-                detections = self._process_frame(frame, h, w)
-
-                # Auto-calibrate with detections
-                if detections and not self.estimator.calibrated:
-                    self.estimator.auto_calibrate(detections, h)
-
-                # Provide navigation guidance
-                if detections:
-                    self._provide_guidance(detections, frame)
-
-                # Draw visualizations
-                frame = self._draw_visualizations(frame, detections)
-
-                # Display
-                cv2.imshow("MoveFree Ultimate - Your AI Eyes", frame)
-
-                # Handle keyboard
-                key = cv2.waitKey(1) & 0xFF
-                if key == ord("q"):
-                    logger.info("Quit requested")
-                    self.running = False
-
-                # Update FPS
-                self.frame_count += 1
-                if self.frame_count % 30 == 0:
-                    current_time = time.time()
-                    self.fps = 30 / (current_time - self.last_fps_time)
-                    self.last_fps_time = current_time
-
-        except KeyboardInterrupt:
-            logger.info("Interrupted by user")
-
-        finally:
-            # Cleanup
-            logger.info("🛑 Shutting down...")
-            stream.stop()
-            self.voice_ai.stop_listening()
-            self.audio.stop()
-            cv2.destroyAllWindows()
-            logger.info("✅ Shutdown complete")
-
-    def _process_frame(self, frame, height, width) -> list:
-        """Process frame and return list of Detection objects"""
-        # Run YOLO detection with tracking
-        try:
-            results = self.model.track(
-                frame,
-                conf=0.45,  # Higher threshold for COCO (fewer false positives)
-                persist=True,
-                tracker="bytetrack.yaml",
-                verbose=False,
-            )
-        except:
-            # Fallback if tracking fails
-            results = self.model(frame, conf=0.45, verbose=False)
-
-        detections = []
-
-        if not results or not results[0].boxes:
-            return detections
-
-        # Process each detection
-        for box in results[0].boxes:
-            try:
-                class_id = int(box.cls[0])
-                class_name = self.class_names.get(class_id, "unknown")
-                confidence = float(box.conf[0])
-
-                bbox = box.xyxy[0].cpu().numpy()
-                bbox_tuple = tuple(map(int, bbox))
-
-                # Get track ID if available
-                track_id = (
-                    int(box.id[0])
-                    if hasattr(box, "id") and box.id is not None
-                    else None
-                )
-
-                # Estimate distance
-                distance = self.estimator.estimate(
-                    bbox_tuple, height, width, class_name=class_name, track_id=track_id
-                )
-
-                # Classify zone
-                zone = self.navigator.classify_zone(bbox_tuple)
-
-                # Determine priority (person is always critical)
-                priority = (
-                    2
-                    if class_name == "person"
-                    else 1 if class_id in self.critical_classes else 0
-                )
-
-                detection = Detection(
-                    label=class_name,
-                    confidence=confidence,
-                    bbox=bbox_tuple,
-                    distance=distance,
-                    zone=zone,
-                    priority=priority,
-                )
-
-                detections.append(detection)
-
-            except Exception as e:
-                logger.debug(f"Error processing detection: {e}")
+        while self.running:
+            # 1. Read Frame
+            frame = stream.read()
+            if frame is None:
+                # Robustness: Auto-reconnect
+                logger.warning("Video stream lost. Reconnecting...")
+                time.sleep(1)
+                stream.stop()
+                stream = StreamLoader(self.video_source)
                 continue
 
-        return detections
+            # 2. Resize (Critical for FPS)
+            frame = cv2.resize(frame, (640, 480))
+            self.current_frame = frame
+            h, w = frame.shape[:2]
 
-    def _provide_guidance(self, detections: list, frame):
-        """Provide audio navigation guidance"""
-        current_time = time.time()
+            # 3. Update Stream Buffer
+            with buffer_lock:
+                frame_buffer = frame.copy()
+            self.voice_ai.set_frame(frame)
 
-        # Filter detections if in tracking mode
-        if self.tracking_mode:
-            filtered = [d for d in detections if d.label == self.tracking_mode]
-            if filtered:
-                closest = min(filtered, key=lambda d: d.distance)
-                message = f"{self.tracking_mode} found {closest.zone}, {closest.distance:.1f} meters away"
-                self.audio.speak(message, priority=True)
-                # Reset tracking mode after found
-                self.tracking_mode = None
-            return
+            # 4. Late Initialization
+            if not self.navigator:
+                self.navigator = ZoneBasedNavigator(w, h)
+            if (
+                not self.estimator.calibrated
+                and self.calibration_frames < self.max_calibration_frames
+            ):
+                self.calibration_frames += 1
 
-        # Regular navigation guidance
-        if current_time - self.last_guidance_time < self.guidance_interval:
-            return
+            # 5. SENSOR FUSION CHECK (Safety First)
+            # A. Light Check
+            if self.hw.check_ambient_light(frame) == "DARK":
+                if time.time() - self.last_light_warn > 20:
+                    self.audio.speak("Environment is too dark.", priority=True)
+                    self.last_light_warn = time.time()
 
-        # Get navigation decision
-        guidance = self.navigator.analyze_detections(detections)
+            # B. Ultrasonic Check (Invisible Walls/Glass)
+            sonar_dist = self.hw.get_distance()
 
-        # Speak guidance
-        priority = guidance.get("priority", 0)
-        message = guidance.get("message", "")
+            # 6. VISION PROCESSING (With Frame Skipping)
+            # Only run heavy AI model every SKIP_FRAMES
+            if self.frame_count % (self.SKIP_FRAMES + 1) == 0:
+                self.cached_detections = self._run_inference(frame, h, w)
 
-        if message and priority >= 1:
-            self.audio.speak(message, priority=(priority == 2))
-            self.last_guidance_time = current_time
+                # Auto-calibrate estimator using people in the scene
+                if self.cached_detections and not self.estimator.calibrated:
+                    self.estimator.auto_calibrate(self.cached_detections, h)
 
-    def _draw_visualizations(self, frame, detections: list):
-        """Draw visualizations on frame"""
-        # Draw zone boundaries
-        frame = self.navigator.draw_zones(frame)
+            # Use cached detections for UI smoothness
+            detections = self.cached_detections
 
-        # Draw detections with distance
-        for det in detections:
-            x1, y1, x2, y2 = det.bbox
-
-            # Color based on distance
-            if det.distance < 1.0:
-                color = (0, 0, 255)  # Red - danger
-            elif det.distance < 2.0:
-                color = (0, 165, 255)  # Orange - caution
+            # 7. DECISION LOGIC
+            # If Sonar detects something VERY close (< 1.0m), override Vision
+            if sonar_dist < 1.0:
+                if time.time() - self.last_guidance_time > 1.2:
+                    self.audio.speak(
+                        f"Stop! Obstacle {int(sonar_dist*100)} centimeters.",
+                        priority=True,
+                    )
+                    self.hw.trigger_haptic(3)  # Both motors vibrate
+                    self.last_guidance_time = time.time()
             else:
-                color = (0, 255, 0)  # Green - safe
+                # Standard Vision Guidance
+                self._process_guidance(detections)
 
-            # Draw bbox
-            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            # 8. VISUALIZATION
+            vis_frame = self._draw_ui(frame, detections)
+            cv2.imshow("MoveFree Indoor", vis_frame)
 
-            # Draw label with distance and confidence
-            label = f"{det.label} {det.distance:.1f}m ({det.confidence:.2f})"
+            # 9. FPS Calculation
+            self.frame_count += 1
+            if self.frame_count % 30 == 0:
+                cur = time.time()
+                self.fps = 30 / (cur - self.last_fps_time)
+                self.last_fps_time = cur
+
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                self.running = False
+
+        # Cleanup
+        logger.info("🛑 Shutting down...")
+        self.hw.stop()
+        stream.stop()
+        self.voice_ai.stop_listening()
+        self.audio.stop()
+        cv2.destroyAllWindows()
+
+    def _run_inference(self, frame, h, w):
+        """Runs YOLO and returns structured Detections"""
+        try:
+            # Using 'predict' is faster than 'track' for indoor navigation with skipping
+            results = self.model.predict(frame, conf=0.45, verbose=False)
+        except:
+            return []
+
+        dets = []
+        if not results or not results[0].boxes:
+            return dets
+
+        for box in results[0].boxes:
+            try:
+                cls = int(box.cls[0])
+                label = self.class_names[cls]
+                conf = float(box.conf[0])
+                x1, y1, x2, y2 = map(int, box.xyxy[0])
+                bbox = (x1, y1, x2, y2)
+
+                # Calculations
+                dist = self.estimator.estimate(bbox, h, w, label)
+                zone = self.navigator.classify_zone(bbox)
+                clock = self.get_clock_direction(bbox, w)
+
+                # Priority
+                prio = 0
+                if label in ["person", "door"]:
+                    prio = 2
+                elif label in self.critical_classes:
+                    prio = 1
+
+                # Use Detection class from navigator.py
+                dets.append(Detection(label, conf, bbox, dist, zone, prio, clock))
+            except:
+                continue
+        return dets
+
+    def _process_guidance(self, detections):
+        """Decides what to speak"""
+        curr = time.time()
+
+        # A. Tracking Mode (User asked to find X)
+        if self.tracking_mode:
+            targets = [d for d in detections if d.label == self.tracking_mode]
+            if targets:
+                best = min(targets, key=lambda x: x.distance)
+                if curr - self.last_guidance_time > 2.5:
+                    self.audio.speak(
+                        f"{self.tracking_mode} {best.clock_dir}, {best.distance:.1f} meters",
+                        priority=True,
+                    )
+                    self.last_guidance_time = curr
+            return
+
+        # B. Critical Warnings (Navigator Logic)
+        crit = self.navigator.get_critical_warning(detections)
+        if crit:
+            if curr - self.last_guidance_time > 1.5:
+                self.audio.speak(crit, priority=True)
+                self.hw.trigger_haptic(3)  # Vibration Alert
+                self.last_guidance_time = curr
+            return
+
+        # C. Regular Navigation
+        if curr - self.last_guidance_time < self.guidance_interval:
+            return
+
+        res = self.navigator.analyze_detections(detections)
+        if res["message"]:
+            self.audio.speak(res["message"])
+            self.last_guidance_time = curr
+
+        # Haptic Feedback (Left/Right pulse)
+        if res.get("haptic"):
+            self.hw.trigger_haptic(res["haptic"])
+
+    def _draw_ui(self, frame, detections):
+        """Draws Zones, Bounding Boxes and Info"""
+        if self.navigator:
+            frame = self.navigator.draw_zones(frame)
+
+        for d in detections:
+            color = (0, 255, 0)
+            if d.priority == 2:
+                color = (0, 165, 255)  # Orange
+
+            cv2.rectangle(
+                frame, (d.bbox[0], d.bbox[1]), (d.bbox[2], d.bbox[3]), color, 2
+            )
             cv2.putText(
                 frame,
-                label,
-                (x1, y1 - 10),
+                f"{d.label} {d.clock_dir} {d.distance:.1f}m",
+                (d.bbox[0], d.bbox[1] - 10),
                 cv2.FONT_HERSHEY_SIMPLEX,
                 0.5,
                 color,
                 2,
             )
 
-        # Draw FPS
+        # HUD
         cv2.putText(
             frame,
             f"FPS: {self.fps:.1f}",
-            (10, frame.shape[0] - 80),
+            (10, 30),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
+            0.7,
             (255, 255, 255),
             2,
         )
-
-        # Draw model info
+        mode = self.tracking_mode if self.tracking_mode else "Auto-Nav"
         cv2.putText(
             frame,
-            "YOLOv8n COCO (80 classes)",
-            (10, 30),
+            f"Mode: {mode}",
+            (10, 60),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (0, 255, 255),
+            0.7,
+            (255, 255, 0),
             2,
         )
 
-        # Draw calibration status
-        if not self.estimator.calibrated:
-            cv2.putText(
-                frame,
-                "CALIBRATING...",
-                (10, frame.shape[0] - 50),
-                cv2.FONT_HERSHEY_SIMPLEX,
-                0.6,
-                (0, 255, 255),
-                2,
-            )
+        # Sonar Data
+        sonar = self.hw.get_distance()
+        sonar_txt = f"Sonar: {sonar}m" if sonar < 5.0 else "Sonar: Clear"
+        cv2.putText(
+            frame, sonar_txt, (10, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 255), 2
+        )
 
         return frame
 
 
 if __name__ == "__main__":
-    import sys
+    # Check for IP Camera in ENV
+    src = "0"
+    if os.getenv("IP_CAMERA_URL"):
+        src = os.getenv("IP_CAMERA_URL")
 
-    # Configuration
-    VIDEO_SOURCE = "http://10.92.94.244:8080/video"  # Your IP camera
-    MIC_INDEX = 2  # Your microphone index
-    MODEL_PATH = "yolov8n.pt"  # Generic COCO model
-
-    # Initialize and run system
-    logger.info(f"Using YOLOv8n COCO model with 80 classes")
-    logger.info(
-        "Detecting: person, furniture, vehicles, animals, electronics, and more"
-    )
-
-    system = MoveFreeUltimateSystem(
-        video_source=VIDEO_SOURCE, model_path=MODEL_PATH, mic_index=MIC_INDEX
-    )
-
-    system.run()
+    # Run System
+    MoveFreeIndoorSystem(video_source=src).run()
