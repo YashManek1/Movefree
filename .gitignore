@@ -1,0 +1,17 @@
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+
+# local/private config
+config.js
+
+# logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS / editor
+.DS_Store
+.vscode/
