@@ -1,0 +1,24 @@
+{
+    "model_path": "runs\\detect\\movefree_indoor_n\\weights\\best.pt",
+    "test_date": "2025-11-25T08:31:26.418674",
+    "device": "cuda:0",
+    "overall_metrics": {
+        "mAP@0.5": 0.8176687819957827,
+        "mAP@0.5:0.95": 0.6489128554268794,
+        "precision": 0.8039585264020687,
+        "recall": 0.7644746499336801,
+        "f1_score": 0.7837191031737023
+    },
+    "critical_classes": {
+        "door": 0.4171003360407918,
+        "stairs": 0.3279259828333817,
+        "person": 0.835868416223698
+    },
+    "speed": {
+        "mean_ms": 30.83971591949463,
+        "std_ms": 19.714550002562383,
+        "fps": 32.42572021773626,
+        "rpi5_fps_estimate": 10.808573405912087
+    },
+    "deployment_ready": {
+        "raspberry_pi_5": 
