@@ -57,4 +57,37 @@ export const STREAM_URL = "http://your-stream-url";
 
 ## Contributors
 
-Made with ❤️
+Made with ❤️ by
+
+<table>
+  <tr>
+    <td align="center">
+      <a href="https://github.com/Samyak-Vishrani">
+        <img src="https://github.com/Samyak-Vishrani.png" width="100px;" alt="Contributor"/>
+        <br />
+        <sub><b>Samyak Vishrani</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/SmitDoshi-205">
+        <img src="https://github.com/SmitDoshi-205.png" width="100px;" alt="Contributor"/>
+        <br />
+        <sub><b>Smit Doshi</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/SudevOP1">
+        <img src="https://github.com/SudevOP1.png" width="100px;" alt="Contributor"/>
+        <br />
+        <sub><b>Sudev Dahitule</b></sub>
+      </a>
+    </td>
+    <td align="center">
+      <a href="https://github.com/YashManek1">
+        <img src="https://github.com/YashManek1.png" width="100px;" alt="Contributor"/>
+        <br />
+        <sub><b>Yash Manek</b></sub>
+      </a>
+    </td>
+  </tr>
+</table>
