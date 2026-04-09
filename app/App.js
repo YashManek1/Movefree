@@ -1,8 +1,9 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
+import { Alert, Vibration } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Alert } from 'react-native';
 import * as Location from 'expo-location';
+
 import LoginScreen from './LoginScreen';
 import VideoScreen from './VideoScreen';
 import LocationScreen from './LocationScreen';
@@ -12,61 +13,75 @@ const Stack = createNativeStackNavigator();
 export default function App() {
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
+
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
 
-  const handleLogin = (navigation) => {
-    if (!name.trim() || !contact.trim()) {
-      Alert.alert('Please fill the fields', 'Enter both username and contact number.');
-      return;
-    }
-    navigation.navigate('Video');
-  };
-
-  const requestLocation = useCallback(async () => {
-    setLoadingLocation(true);
-
+  // Fetch current location for LocationScreen
+  const requestLocation = async () => {
     try {
-      // Check if GPS / location services are ON
-      const servicesEnabled = await Location.hasServicesEnabledAsync();
-      if (!servicesEnabled) {
-        Alert.alert('Location services off', 'Please enable GPS / Location Services on your device.');
-        setLocation(null);
-        return;
-      }
+      setLoadingLocation(true);
 
-      // Ask for permission
       const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== 'granted') {
-        Alert.alert('Permission required', 'Allow location access to see live location.');
-        setLocation(null);
+        Alert.alert('Permission Denied', 'Location permission is required.');
+        setLoadingLocation(false);
         return;
       }
 
-      // Fetch current location
-      const currentLocation = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-        mayShowUserSettingsDialog: true,
-      });
-
+      const currentLocation = await Location.getCurrentPositionAsync({});
       setLocation({
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        latitude: currentLocation.coords.latitude.toFixed(6),
+        longitude: currentLocation.coords.longitude.toFixed(6),
         accuracy: currentLocation.coords.accuracy,
       });
     } catch (error) {
-      console.log('Location error:', error);
-      Alert.alert('Location error', error.message || 'Unable to fetch location.');
-      setLocation(null);
+      Alert.alert('Location Error', 'Unable to fetch location.');
     } finally {
       setLoadingLocation(false);
     }
-  }, []);
+  };
+
+  // Emergency alert when video is obstructed
+  const handleSOSDetected = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+
+      if (status !== 'granted') {
+        Vibration.vibrate([500, 200, 500, 200, 500]);
+
+        Alert.alert(
+          'Emergency Alert',
+          'Emergency, Video Obstructed Current Location : Permission Denied'
+        );
+        return;
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({});
+      const latitude = currentLocation.coords.latitude.toFixed(6);
+      const longitude = currentLocation.coords.longitude.toFixed(6);
+
+      Vibration.vibrate([500, 200, 500, 200, 500]);
+
+      Alert.alert(
+        'Emergency Alert',
+        `Emergency, Video Obstructed Current Location : ${latitude}, ${longitude}`
+      );
+    } catch (error) {
+      Vibration.vibrate([500, 200, 500, 200, 500]);
+
+      Alert.alert(
+        'Emergency Alert',
+        'Emergency, Video Obstructed Current Location : Unable to fetch location'
+      );
+    }
+  };
 
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
+        {/* LOGIN SCREEN */}
         <Stack.Screen name="Login" options={{ title: 'Login' }}>
           {(props) => (
             <LoginScreen
@@ -75,15 +90,29 @@ export default function App() {
               contact={contact}
               setName={setName}
               setContact={setContact}
-              onLogin={() => handleLogin(props.navigation)}
+              onLogin={() => {
+                if (!name.trim() || !contact.trim()) {
+                  Alert.alert('Validation Error', 'Please enter both name and contact.');
+                  return;
+                }
+
+                props.navigation.navigate('Video');
+              }}
             />
           )}
         </Stack.Screen>
 
-        <Stack.Screen name="Video" options={{ title: 'Live Video' }}>
-          {(props) => <VideoScreen {...props} />}
+        {/* VIDEO SCREEN */}
+        <Stack.Screen name="Video" options={{ title: 'Live Video Stream' }}>
+          {(props) => (
+            <VideoScreen
+              {...props}
+              onSOSDetected={handleSOSDetected}
+            />
+          )}
         </Stack.Screen>
 
+        {/* LOCATION SCREEN */}
         <Stack.Screen name="Location" options={{ title: 'Live Location' }}>
           {(props) => (
             <LocationScreen

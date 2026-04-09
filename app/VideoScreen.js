@@ -10,10 +10,15 @@ import {
 import { STREAM_URL } from './config';
 import { WebView } from 'react-native-webview';
 
-
-export default function VideoScreen({ navigation }) {
+export default function VideoScreen({ navigation, onSOSDetected }) {
   const [loading, setLoading] = useState(true);
+  const [sosTriggered, setSosTriggered] = useState(false);
 
+  const screenWidth = Dimensions.get('window').width;
+  const videoWidth = screenWidth - 40;
+  const videoHeight = (videoWidth * 3) / 4;
+
+  // Normal loading timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -22,9 +27,20 @@ export default function VideoScreen({ navigation }) {
     return () => clearTimeout(timer);
   }, []);
 
-  const screenWidth = Dimensions.get('window').width;
-  const videoWidth = screenWidth - 40;
-  const videoHeight = (videoWidth * 3) / 4;
+  // Trigger SOS if stream is still not healthy after 8 seconds
+  useEffect(() => {
+    let sosTimer;
+
+    if (loading && STREAM_URL && !sosTriggered) {
+      sosTimer = setTimeout(async () => {
+        await triggerSOSOnce();
+      }, 8000);
+    }
+
+    return () => {
+      if (sosTimer) clearTimeout(sosTimer);
+    };
+  }, [loading, sosTriggered]);
 
   const streamHtml = useMemo(
     () => `
@@ -68,7 +84,11 @@ export default function VideoScreen({ navigation }) {
           <div class="container">
             ${
               STREAM_URL
-                ? `<img src="${STREAM_URL}" onload="window.ReactNativeWebView.postMessage('loaded')" />`
+                ? `<img 
+                    src="${STREAM_URL}" 
+                    onload="window.ReactNativeWebView.postMessage('loaded')" 
+                    onerror="window.ReactNativeWebView.postMessage('stream-error')" 
+                  />`
                 : `<div class="message">No stream URL configured.<br/>Set STREAM_URL locally before running.</div>`
             }
           </div>
@@ -77,6 +97,15 @@ export default function VideoScreen({ navigation }) {
     `,
     []
   );
+
+  const triggerSOSOnce = async () => {
+    if (!sosTriggered) {
+      setSosTriggered(true);
+      if (onSOSDetected) {
+        await onSOSDetected();
+      }
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -96,12 +125,22 @@ export default function VideoScreen({ navigation }) {
           javaScriptEnabled
           domStorageEnabled
           scrollEnabled={false}
-          onMessage={(event) => {
-            if (event.nativeEvent.data === 'loaded') {
+          onMessage={async (event) => {
+            const message = event.nativeEvent.data;
+
+            if (message === 'loaded') {
               setLoading(false);
             }
+
+            if (message === 'stream-error') {
+              setLoading(false);
+              await triggerSOSOnce();
+            }
           }}
-          onError={() => setLoading(false)}
+          onError={async () => {
+            setLoading(false);
+            await triggerSOSOnce();
+          }}
           style={styles.webview}
         />
       </View>
@@ -112,6 +151,12 @@ export default function VideoScreen({ navigation }) {
       >
         <Text style={styles.buttonText}>Show Live Location</Text>
       </TouchableOpacity>
+
+      {sosTriggered && (
+        <Text style={styles.sosText}>
+          Emergency alert triggered due to video obstruction / stream failure.
+        </Text>
+      )}
     </View>
   );
 }
@@ -167,5 +212,12 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
+  },
+  sosText: {
+    marginTop: 14,
+    color: '#DC2626',
+    fontSize: 14,
+    fontWeight: '600',
+    textAlign: 'center',
   },
 });
