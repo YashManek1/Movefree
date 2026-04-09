@@ -8,14 +8,13 @@ A simple React Native Expo app with:
 
 ## Setup
 
-1. Open a terminal in `/app`
-2. Install dependencies:
+1. Open a terminal in `/app` and install dependencies:
 
 ```bash
 npm install
 ```
 
-3. Start Expo:
+2. Start Expo:
 
 ```bash
 npm start
@@ -41,5 +40,5 @@ npx expo start --tunnel
 
 ## Notes
 
-- The video screen loads content from `http://192.168.29.13:5000/video`.
+- The video screen loads content from `http://{STREAM_URL}/video`.
 - The location screen requests foreground location permission and shows latitude, longitude, and accuracy.
