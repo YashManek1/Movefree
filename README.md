@@ -50,7 +50,7 @@ npx expo start --tunnel
 Create a config file at `app/config.js` for environment variables:
 
 ```js
-export const STREAM_URL = "http://your-stream-url";
+export const STREAM_URL = "http://your-stream-url/video";
 ```
 
 ---
