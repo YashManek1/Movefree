@@ -1,6 +1,7 @@
 {
   "expo": {
     "name": "MooveFree App",
+    "icon": "./assets/icon.png",
     "slug": "moovefree-app",
     "version": "1.0.0",
     "orientation": "portrait",
