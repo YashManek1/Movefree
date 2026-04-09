@@ -2,13 +2,13 @@
 
 A simple React Native Expo app with:
 
-- Login screen for user name and contact input
-- Main screen showing a live video stream from `http://192.168.29.13:5000/video`
+- Login screen
+- Main screen showing a live video stream
 - Location screen showing the device's live location
 
 ## Setup
 
-1. Open a terminal in `d:\TY B Tech\IPD\Movefree_App`
+1. Open a terminal in `/app`
 2. Install dependencies:
 
 ```bash
