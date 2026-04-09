@@ -1,5 +1,5 @@
 """
-MoveFree Model Metrics Analyzer
+MooveFree Model Metrics Analyzer
 Comprehensive testing script for trained YOLOv8n/YOLOv11m models
 Tests on validation set and provides detailed per-class analysis
 """
@@ -24,12 +24,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MoveFreeMetricsTester:
+class MooveFreeMetricsTester:
     """
-    Comprehensive metrics testing for MoveFree indoor navigation model
+    Comprehensive metrics testing for MooveFree indoor navigation model
     """
     
-    def __init__(self, weights_path, data_yaml="datasets/movefree_combined/movefree.yaml"):
+    def __init__(self, weights_path, data_yaml="datasets/moovefree_combined/moovefree.yaml"):
         """
         Initialize metrics tester
         
@@ -44,7 +44,7 @@ class MoveFreeMetricsTester:
             raise FileNotFoundError(f"❌ Model not found: {weights_path}")
         
         logger.info("=" * 70)
-        logger.info("🔍 MoveFree Model Metrics Analyzer")
+        logger.info("🔍 MooveFree Model Metrics Analyzer")
         logger.info("=" * 70)
         
         # Load model
@@ -63,7 +63,7 @@ class MoveFreeMetricsTester:
         logger.info(f"📊 Dataset: {self.dataset_config['path']}")
         logger.info(f"🏷️  Classes: {self.num_classes}")
         
-        # Critical safety classes for MoveFree
+        # Critical safety classes for MooveFree
         self.critical_classes = {
             9: "door",      # Exit finding
             13: "stairs",   # Fall prevention
@@ -186,7 +186,7 @@ class MoveFreeMetricsTester:
         logger.info(f"\n💾 Saved per-class metrics to: {csv_path}")
     
     def _analyze_critical_classes(self, metrics):
-        """Analyze safety-critical classes for MoveFree"""
+        """Analyze safety-critical classes for MooveFree"""
         logger.info("\n" + "=" * 70)
         logger.info("🚨 CRITICAL SAFETY CLASSES ANALYSIS")
         logger.info("=" * 70)
@@ -476,17 +476,17 @@ def main():
     """Main testing workflow"""
     import argparse
     
-    parser = argparse.ArgumentParser(description="MoveFree Model Metrics Tester")
+    parser = argparse.ArgumentParser(description="MooveFree Model Metrics Tester")
     parser.add_argument(
         "--weights",
         type=str,
-        default="runs/detect/movefree_indoor_n/weights/best.pt",
+        default="runs/detect/moovefree_indoor_n/weights/best.pt",
         help="Path to trained model weights"
     )
     parser.add_argument(
         "--data",
         type=str,
-        default="datasets/movefree_combined/movefree.yaml",
+        default="datasets/moovefree_combined/moovefree.yaml",
         help="Path to dataset YAML"
     )
     parser.add_argument(
@@ -504,7 +504,7 @@ def main():
     args = parser.parse_args()
     
     # Initialize tester
-    tester = MoveFreeMetricsTester(
+    tester = MooveFreeMetricsTester(
         weights_path=args.weights,
         data_yaml=args.data
     )

@@ -1,5 +1,5 @@
 """
-Data augmentation for MoveFree training
+Data augmentation for MooveFree training
 Enhances dataset diversity for better generalization
 """
 

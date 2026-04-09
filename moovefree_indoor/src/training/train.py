@@ -1,5 +1,5 @@
 """
-Main training script for MoveFree Indoor Navigation
+Main training script for MooveFree Indoor Navigation
 Trains YOLO11 on HomeObjects-3K dataset
 """
 
@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-class MoveFreeTrainer:
+class MooveFreeTrainer:
     def __init__(self, config_path="config/config.yaml"):
         """Initialize trainer with configuration"""
         with open(config_path, 'r') as f:
@@ -31,7 +31,7 @@ class MoveFreeTrainer:
                 logger.warning("⚠️ CUDA not available, falling back to CPU")
                 self.device = 'cpu'
         
-        logger.info(f"🚀 MoveFree Trainer initialized")
+        logger.info(f"🚀 MooveFree Trainer initialized")
         logger.info(f"📱 Device: {self.device}")
         logger.info(f"🎯 Model: {self.model_name}")
     
@@ -57,7 +57,7 @@ class MoveFreeTrainer:
                 patience=self.training_config['patience'],
                 save_period=self.training_config['save_period'],
                 project='runs/detect',
-                name='movefree_indoor',
+                name='moovefree_indoor',
                 exist_ok=True,
                 pretrained=True,
                 optimizer=self.training_config['optimizer'],
@@ -89,8 +89,8 @@ class MoveFreeTrainer:
         """Print training summary"""
         logger.info("📊 Training Summary:")
         logger.info(f"   Best epoch: {results.best_epoch if hasattr(results, 'best_epoch') else 'N/A'}")
-        logger.info(f"   Model saved to: runs/detect/movefree_indoor/weights/best.pt")
-        logger.info(f"   Metrics available in: runs/detect/movefree_indoor/")
+        logger.info(f"   Model saved to: runs/detect/moovefree_indoor/weights/best.pt")
+        logger.info(f"   Metrics available in: runs/detect/moovefree_indoor/")
     
     def resume_training(self, checkpoint_path):
         """Resume training from checkpoint"""
@@ -104,7 +104,7 @@ class MoveFreeTrainer:
         
         return results
     
-    def validate(self, weights_path="runs/detect/movefree_indoor/weights/best.pt"):
+    def validate(self, weights_path="runs/detect/moovefree_indoor/weights/best.pt"):
         """Validate trained model"""
         logger.info("🔍 Running validation...")
         
@@ -130,7 +130,7 @@ class MoveFreeTrainer:
 def main():
     """Main training function"""
     # Initialize trainer
-    trainer = MoveFreeTrainer()
+    trainer = MooveFreeTrainer()
     
     # Train model
     results = trainer.train()

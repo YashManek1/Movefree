@@ -1,13 +1,13 @@
 {
   "expo": {
-    "name": "MoveFree App",
-    "slug": "movefree-app",
+    "name": "MooveFree App",
+    "slug": "moovefree-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": ["ios", "android", "web"],
     "jsEngine": "hermes",
     "android": {
-      "package": "com.movefree.app",
+      "package": "com.moovefree.app",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION"

@@ -1,4 +1,4 @@
-# MoveFree App
+# MooveFree App
 
 A simple React Native Expo app with:
 

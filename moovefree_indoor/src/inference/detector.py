@@ -1,5 +1,5 @@
 """
-Object detection module for MoveFree
+Object detection module for MooveFree
 Tuned for stability
 """
 
@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 class IndoorDetector:
     def __init__(
         self,
-        model_path="runs/detect/movefree_indoor/weights/best.pt",
+        model_path="runs/detect/moovefree_indoor/weights/best.pt",
         config_path="config/config.yaml",
     ):
         with open(config_path, "r") as f:

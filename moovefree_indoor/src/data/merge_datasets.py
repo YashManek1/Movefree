@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class IntelligentDatasetMerger:
-    def __init__(self, base_path="datasets/movefree_combined"):
+    def __init__(self, base_path="datasets/moovefree_combined"):
         self.base_path = Path(base_path)
         self.images_dir = self.base_path / "images"
         self.labels_dir = self.base_path / "labels"
@@ -508,7 +508,7 @@ class IntelligentDatasetMerger:
             "nc": len(self.unified_classes),
         }
 
-        yaml_path = self.base_path / "movefree.yaml"
+        yaml_path = self.base_path / "moovefree.yaml"
         with open(yaml_path, "w") as f:
             yaml.dump(yaml_content, f, sort_keys=False)
 

@@ -22,7 +22,7 @@ load_dotenv()
 # --- LOG CLEANUP ---
 # Only show essential info
 logging.basicConfig(level=logging.ERROR, format="%(message)s")
-logger = logging.getLogger("MoveFree_Outdoor")
+logger = logging.getLogger("MooveFree_Outdoor")
 logger.setLevel(logging.INFO)
 
 # Mute noisy libraries
@@ -32,7 +32,7 @@ logging.getLogger("urllib3").setLevel(logging.WARNING)
 logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
 
-class MoveFreeOutdoor:
+class MooveFreeOutdoor:
     def __init__(self):
         logger.info("🚀 Initializing Outdoor Mode...")
 
@@ -112,7 +112,7 @@ class MoveFreeOutdoor:
                 self.safety.analyze_frame(results[0], frame)
 
             # Visualization
-            cv2.imshow("MoveFree Outdoor", results[0].plot())
+            cv2.imshow("MooveFree Outdoor", results[0].plot())
             if cv2.waitKey(1) == ord("q"):
                 self.stop()
                 break
@@ -128,13 +128,13 @@ class MoveFreeOutdoor:
 
 
 if __name__ == "__main__":
-    app = MoveFreeOutdoor()
+    app = MooveFreeOutdoor()
 
     # Allow TTS engine to init
     time.sleep(1)
 
     print("\n" + "=" * 40)
-    print("   🌐 MOVEFREE OUTDOOR NAVIGATION")
+    print("   🌐 MOOVEFREE OUTDOOR NAVIGATION")
     print("=" * 40)
     print("ℹ️  Since this is a laptop, please enter your")
     print("    current location to simulate GPS.")

@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 
-def fix_labels(dataset_path="datasets/movefree_combined"):
+def fix_labels(dataset_path="datasets/moovefree_combined"):
     labels_dir = Path(dataset_path) / "labels"
     
     # Max valid class ID (0 to 18)

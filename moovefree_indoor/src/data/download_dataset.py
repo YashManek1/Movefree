@@ -1,5 +1,5 @@
 """
-Dataset downloader for MoveFree Indoor Navigation
+Dataset downloader for MooveFree Indoor Navigation
 Downloads and prepares HomeObjects-3K dataset
 """
 

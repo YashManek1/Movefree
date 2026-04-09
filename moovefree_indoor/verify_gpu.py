@@ -1,5 +1,5 @@
 """
-GPU and CUDA Verification for MoveFree Training
+GPU and CUDA Verification for MooveFree Training
 Run this BEFORE training to ensure everything is configured correctly
 """
 

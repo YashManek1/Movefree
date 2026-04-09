@@ -37,7 +37,7 @@ logging.basicConfig(
 logging.getLogger("werkzeug").setLevel(logging.WARNING)
 logging.getLogger("ultralytics").setLevel(logging.WARNING)
 
-logger = logging.getLogger("MoveFree")
+logger = logging.getLogger("MooveFree")
 
 # --- LIVESTREAMING SERVER ---
 app = Flask(__name__)
@@ -75,14 +75,14 @@ def start_stream_server():
 
 
 # --- MAIN SYSTEM CLASS ---
-class MoveFreeIndoorSystem:
+class MooveFreeIndoorSystem:
     def __init__(self, video_source="0", mic_index=None):
         self.video_source = video_source
         self.running = False
         self.current_frame = None
 
         logger.info("=" * 60)
-        logger.info("🚀 MoveFree Ultimate - Indoor Autopilot (Optimized)")
+        logger.info("🚀 MooveFree Ultimate - Indoor Autopilot (Optimized)")
         logger.info("=" * 60)
 
         # 1. Initialize Hardware (Sensors & Haptics)
@@ -351,7 +351,7 @@ class MoveFreeIndoorSystem:
 
             # 8. VISUALIZATION
             vis_frame = self._draw_ui(frame, detections)
-            cv2.imshow("MoveFree Indoor", vis_frame)
+            cv2.imshow("MooveFree Indoor", vis_frame)
 
             # 9. FPS Calculation
             self.frame_count += 1
@@ -509,4 +509,4 @@ if __name__ == "__main__":
         src = os.getenv("IP_CAMERA_URL")
 
     # Run System
-    MoveFreeIndoorSystem(video_source=src).run()
+    MooveFreeIndoorSystem(video_source=src).run()

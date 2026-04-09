@@ -2,7 +2,7 @@ from ultralytics import YOLO
 import cv2
 import argparse
 
-model = YOLO("runs/detect/movefree_finetune_fast/weights/best.pt")
+model = YOLO("runs/detect/moovefree_finetune_fast/weights/best.pt")
 
 print("🔍 MODEL'S CLASS NAMES:")
 print(model.names)

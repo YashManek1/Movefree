@@ -1,5 +1,5 @@
 """
-MoveFree Indoor Navigation - Complete Training Pipeline (WITH RESUME)
+MooveFree Indoor Navigation - Complete Training Pipeline (WITH RESUME)
 Optimized for Raspberry Pi 5 deployment with proper dataset
 """
 
@@ -17,9 +17,9 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class MoveFreeTrainer:
+class MooveFreeTrainer:
     """
-    Complete training pipeline for MoveFree indoor navigation
+    Complete training pipeline for MooveFree indoor navigation
     Supports both prototype (RPi5) and production (Jetson) models
     """
 
@@ -29,7 +29,7 @@ class MoveFreeTrainer:
             deployment_target: "raspberry_pi" or "jetson"
         """
         self.deployment_target = deployment_target
-        self.data_yaml = "datasets/movefree_combined/movefree.yaml"
+        self.data_yaml = "datasets/moovefree_combined/moovefree.yaml"
 
         # Model selection based on target
         if deployment_target == "raspberry_pi":
@@ -124,7 +124,7 @@ class MoveFreeTrainer:
             "device": self.device,
             "workers": 8,
             "project": "runs/detect",
-            "name": f"movefree_indoor_{self.model_size}",
+            "name": f"moovefree_indoor_{self.model_size}",
             "exist_ok": True,
             # Optimization
             "optimizer": "AdamW",
@@ -197,7 +197,7 @@ class MoveFreeTrainer:
         # Auto-detect checkpoint if not provided
         if checkpoint_path is None:
             checkpoint_path = (
-                f"runs/detect/movefree_indoor_{self.model_size}/weights/last.pt"
+                f"runs/detect/moovefree_indoor_{self.model_size}/weights/last.pt"
             )
             logger.info(f"📍 Auto-detected checkpoint: {checkpoint_path}")
 
@@ -279,7 +279,7 @@ class MoveFreeTrainer:
             "device": self.device,
             "workers": 8,
             "project": "runs/detect",
-            "name": f"movefree_finetune_{self.model_size}",
+            "name": f"moovefree_finetune_{self.model_size}",
             "exist_ok": True,
             # Lower learning rate for fine-tuning
             "optimizer": "AdamW",
@@ -449,7 +449,7 @@ def main():
     """Main training workflow"""
     import argparse
 
-    parser = argparse.ArgumentParser(description="MoveFree Training Pipeline")
+    parser = argparse.ArgumentParser(description="MooveFree Training Pipeline")
     parser.add_argument(
         "--mode",
         type=str,
@@ -481,7 +481,7 @@ def main():
     args = parser.parse_args()
 
     # Initialize trainer
-    trainer = MoveFreeTrainer(deployment_target=args.target)
+    trainer = MooveFreeTrainer(deployment_target=args.target)
 
     if args.mode == "train":
         # First-time training
@@ -490,7 +490,7 @@ def main():
         if results:
             # Auto-validate
             weights_path = (
-                f"runs/detect/movefree_indoor_{trainer.model_size}/weights/best.pt"
+                f"runs/detect/moovefree_indoor_{trainer.model_size}/weights/best.pt"
             )
             trainer.validate(weights_path)
 
@@ -508,7 +508,7 @@ def main():
 
         if results:
             weights_path = (
-                f"runs/detect/movefree_indoor_{trainer.model_size}/weights/best.pt"
+                f"runs/detect/moovefree_indoor_{trainer.model_size}/weights/best.pt"
             )
             trainer.validate(weights_path)
             trainer.export_for_deployment(weights_path)
@@ -522,7 +522,7 @@ def main():
 
         if results:
             weights_path = (
-                f"runs/detect/movefree_finetune_{trainer.model_size}/weights/best.pt"
+                f"runs/detect/moovefree_finetune_{trainer.model_size}/weights/best.pt"
             )
             trainer.validate(weights_path)
             trainer.export_for_deployment(weights_path)
