@@ -5,7 +5,7 @@ MooveFree is an assistive navigation system designed to improve mobility for vis
 MooveFree uses a hybrid sensing approach to detect obstacles and guide users.
 The system delivers clear navigation feedback through audio and spatial cues.
 
-![Moovefree System Flow](https://raw.githubusercontent.com/YashManek1/Movefree/main/assets/system_flow.png)
+![Moovefree System Flow](https://raw.githubusercontent.com/YashManek1/Movefree/refs/heads/main/assets/system_flow.png)
 
 ---
 
