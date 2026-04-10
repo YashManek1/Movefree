@@ -48,11 +48,8 @@ while True:
         print("\n" + "=" * 50)
         print("🎯 DETECTING (Enhanced Mode)...")
 
-        # APPLY IMAGE ENHANCEMENTS BEFORE DETECTION
-        # 1. Denoise
         enhanced = cv2.fastNlMeansDenoisingColored(frame, None, 10, 10, 7, 21)
 
-        # 2. Increase contrast
         lab = cv2.cvtColor(enhanced, cv2.COLOR_BGR2LAB)
         l, a, b = cv2.split(lab)
         clahe = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
@@ -60,7 +57,6 @@ while True:
         enhanced = cv2.merge([l, a, b])
         enhanced = cv2.cvtColor(enhanced, cv2.COLOR_LAB2BGR)
 
-        # 3. Detect with VERY LOW threshold + augment=True (TTA)
         results = model(enhanced, conf=0.10, iou=0.3, augment=True, verbose=False)
 
         if results[0].boxes and len(results[0].boxes) > 0:
@@ -71,7 +67,6 @@ while True:
                 class_name = model.names[class_id]
                 conf = float(box.conf[0])
 
-                # Only show if confidence > 0.15
                 if conf > 0.15:
                     print(f"  {i}. {class_name:15s} | Conf: {conf:.2f}")
 

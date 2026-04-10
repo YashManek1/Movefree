@@ -1,0 +1,135 @@
+
+
+Department of Computer Engineering
+DJSCE
+Mumbai University
+2025-26
+
+Smit Doshi 
+60004230225
+Sudev Dahitule 
+60004230171
+Yash Manek
+60004230019
+Under the guidance of
+Dr. Meera Narvekar (Comps)
+Project Guide
+
+Visually impaired individuals face significant challenges in navigating through unfamiliar environments safely and independently. Current solutions, such as guide dogs and cane systems, have limitations in detecting obstacles, providing real-time navigation, or offering dynamic interaction with the surrounding environment.
+Additionally, there is a lack of effective communication between the visually impaired person and their family or caregivers regarding their safety and location.
+This results in a need for a comprehensive, affordable, and portable navigation system that can help visually impaired individuals move safely, while also providing real-time updates to their family members.
+How Are We Solving This:
+MoveFree addresses the challenge of safe, independent navigation for visually impaired individuals in dynamic and unstructured environments. 
+It provides real-time obstacle detection using ultrasonic sensors and an AI-powered vision system delivering timely voice alerts to avoid collisions. 
+Additionally, the system supports voice-command control, point-to-point GPS navigation, and live video &  location sharing with family members for enhanced monitoring and support. 
+This empowers users to move with confidence in public spaces, reducing dependence on others. 
+
+MoveFree is an AI-powered wearable designed to enhance mobility and independence for visually impaired individuals. It integrates advanced technologies such as:
+
+Real-Time Obstacle Detection
+AI-Based Object & Hazard Recognition
+Indoor & Outdoor Voice-Based Navigation 
+Live Location Sharing & POV Video Streaming
+Hands-Free Interaction via Voice Commands
+
+By combining multi-modal sensing MoveFree empowers visually impaired individuals to move confidently and safely in complex environments.
+
+Existing Solutions
+
+Existing Solutions
+
+
+
+
+
+
+
+Smart Glass System Using Deep Learning for the Blind and Visually Impaired
+https://www.mdpi.com/2079-9292/10/22/2756
+
+2. An Innovative Smart Glass for Blind People Using AI https://www.researchgate.net/publication/371978055_An_innovative_smart_glass_for_blind_people_using_artificial_intelligence
+
+3. Smart Cane for the Visually Impaired
+https://www.google.com/url?sa=t&source=web&rct=j&opi=89978449&url=https://assistech.iitd.ac.in/doc/Transed2010_Smart_Cane.pdf&ved=2ahUKEwis-MzNsryMAxVFxzgGHfg-HSUQFnoECBcQAQ&usg=AOvVaw3pA9p6_UMr1EgemXD5g7Sf
+
+4. Review of Navigation Assistive Tools and Technologies for the Visually Impaired
+https://pmc.ncbi.nlm.nih.gov/articles/PMC9606951/
+
+5. Achieving Eco-Innovative Smart Glass Design with the Integration of Opinion Mining, QFD, and TRIZ
+https://ieeexplore.ieee.org/document/9751975
+
+6. The White Cane and Beyond
+https://www.researchgate.net/publication/367632058_Achieving_Eco-Innovative_Smart_Glass_Design_with_the_Integration_of_Opinion_Mining_QFD_and_TRIZ
+
+
+
+
+Model Used: YOLO v8s
+YOLOv8s (You Only Look Once – v8 small)
+Low computational overhead
+Fast inference latency
+Edge-device friendly
+Why YOLOv8s is used?
+Real-time performance 
+High accuracy in detecting multiple objects and classes
+Efficiency 
+Versatility 
+Practical deployment with easy training 
+Strong community support
+
+Key Features
+Point-to-Point GPS Navigation using Google Maps API
+Voice-Guided Directions for step-by-step navigation
+Real-Time Obstacle Detection with voice alerts to prevent collisions
+Live Connectivity for POV video streaming and live location sharing with caregivers
+Hands-Free Interaction through natural language voice commands
+System Capabilities
+Traffic Signal Recognition with voice alerts for red/green lights
+Vehicle & Hazard Proximity Monitoring (cars, buses, trucks, potholes)
+Unstructured Environment Navigation for dynamic public spaces
+Hybrid Sensing Buffer combining camera vision and ultrasonic sensors for enhanced safety
+
+Benchmarking Results 
+1. Accuracy (mAP)
+mAP@0.5 = 81% → Model detects objects correctly most of the time.
+mAP@0.5:0.95 = 55% → Model is less precise when stricter overlap is required.
+2. Interpretation
+The model is very good at finding objects (high recall at IoU=0.5).
+Bounding box placement is moderately precise (lower score at IoU=0.95).
+Dataset Used: https://www.kaggle.com/datasets/saumyapatel/traffic-vehicles-object-detection
+
+Model Used: YOLO v8n
+YOLOv8s (You Only Look Once – v8 nano )
+Nano sized detection model
+Efficient on CPUs
+Edge-device friendly
+Why YOLOv8n is used?
+Lightweight and fast 
+Real time object detection
+Low power consumption
+Reduced model parameters
+Supports custom training
+
+Key Features
+Conversational AI (Gemini) for scene understanding and queries
+Smart Feedback System with interruptible audio and haptic guidance
+Hands-Free Voice Control for navigation and object search
+Live Connectivity via POV streaming and GPS sharing
+Optimized Edge Processing using TFLite INT8 and multithreading
+System Capabilities
+19-Class Object Detection for indoor environments
+High-Safety Detection for stairs and people
+Hybrid Collision Avoidance using vision and ultrasonic sensors
+Lane-Based Navigation with distance estimation
+OCR Text Reading with voice output
+
+Benchmarking Results 
+1. Accuracy (mAP)
+mAP@0.5 = 81.7% → Indicates strong overall reliability in detecting indoor objects correctly.
+
+mAP@0.5:0.95 = 64.9% → hows high precision in bounding box placement across strict overlap thresholds.
+
+2. Interpretation
+The model is highly effective for real-time indoor guidance, specifically for safety-critical classes like stairs and people.
+Optimized for edge processing, the model maintains high accuracy while running at ~13.4 FPS on a Raspberry Pi 5.
+Dataset Used: https://www.kaggle.com/datasets/saumyapatel/traffic-vehicles-object-detection

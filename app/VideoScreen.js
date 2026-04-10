@@ -18,7 +18,6 @@ export default function VideoScreen({ navigation, onSOSDetected }) {
   const videoWidth = screenWidth - 40;
   const videoHeight = (videoWidth * 3) / 4;
 
-  // Normal loading timeout
   useEffect(() => {
     const timer = setTimeout(() => {
       setLoading(false);
@@ -27,7 +26,6 @@ export default function VideoScreen({ navigation, onSOSDetected }) {
     return () => clearTimeout(timer);
   }, []);
 
-  // Trigger SOS if stream is still not healthy after 8 seconds
   useEffect(() => {
     let sosTimer;
 

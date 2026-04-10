@@ -8,7 +8,6 @@ import cv2
 from typing import Tuple
 from collections import deque
 
-
 class AdvancedDistanceEstimator:
     """
     Estimates distance using multiple methods:
@@ -26,14 +25,12 @@ class AdvancedDistanceEstimator:
         """
         self.camera_height = camera_height
         self.focal_length = focal_length
-        self.horizon_offset = 0  # Auto-calibrated
+        self.horizon_offset = 0  
         self.calibrated = False
 
-        # Temporal smoothing buffers
-        self.distance_buffers = {}  # track_id -> deque of distances
+        self.distance_buffers = {}  
         self.buffer_size = 10
 
-        # Known object dimensions (real-world heights in meters)
         self.object_heights = {
             "person": 1.7,
             "door": 2.0,
@@ -57,7 +54,6 @@ class AdvancedDistanceEstimator:
         if len(detections) < 3:
             return False
 
-        # Use bottom points of detected objects to estimate horizon
         bottom_points = []
         for det in detections:
             if hasattr(det, "bbox"):
@@ -65,7 +61,7 @@ class AdvancedDistanceEstimator:
                 bottom_points.append(y2)
 
         if bottom_points:
-            # Median bottom point gives rough horizon estimate
+
             median_bottom = np.median(bottom_points)
             self.horizon_offset = median_bottom - (frame_height / 2)
             self.calibrated = True
@@ -96,22 +92,18 @@ class AdvancedDistanceEstimator:
         """
         x1, y1, x2, y2 = bbox
 
-        # Method 1: Geometric estimation (pinhole camera model)
         geometric_dist = self._geometric_estimate(bbox, frame_height)
 
-        # Method 2: Size-based estimation (if known object)
         size_based_dist = None
         if class_name and class_name in self.object_heights:
             size_based_dist = self._size_based_estimate(bbox, class_name)
 
-        # Method 3: Perspective-based estimation
         perspective_dist = None
         if frame_width:
             perspective_dist = self._perspective_estimate(
                 bbox, frame_height, frame_width
             )
 
-        # Combine estimates (weighted average)
         distances = []
         weights = []
 
@@ -121,7 +113,7 @@ class AdvancedDistanceEstimator:
 
         if size_based_dist:
             distances.append(size_based_dist)
-            weights.append(0.5)  # Trust size-based more for known objects
+            weights.append(0.5)  
 
         if perspective_dist:
             distances.append(perspective_dist)
@@ -132,10 +124,8 @@ class AdvancedDistanceEstimator:
         else:
             distance = geometric_dist if geometric_dist else 5.0
 
-        # Clamp to reasonable indoor range
         distance = np.clip(distance, 0.3, 10.0)
 
-        # Temporal smoothing (if tracking available)
         if track_id is not None:
             distance = self._smooth_distance(track_id, distance)
 
@@ -147,20 +137,15 @@ class AdvancedDistanceEstimator:
         """Pinhole camera model estimation"""
         x1, y1, x2, y2 = bbox
 
-        # Use bottom center of bbox (feet/base of object)
         bottom_y = y2
 
-        # Calculate horizon line (adjusted for camera tilt)
         horizon = (frame_height / 2) - self.horizon_offset
 
-        # Pixels from horizon to object base
         pixel_distance = bottom_y - horizon
 
-        # Objects above horizon are far away or floating
         if pixel_distance <= 5:
-            return 8.0  # Default far distance
+            return 8.0  
 
-        # Pinhole formula: distance = (camera_height * focal_length) / pixel_offset
         distance = (self.camera_height * self.focal_length) / pixel_distance
 
         return distance
@@ -171,16 +156,13 @@ class AdvancedDistanceEstimator:
         """Estimate distance based on known object dimensions"""
         x1, y1, x2, y2 = bbox
 
-        # Pixel height of object in image
         pixel_height = y2 - y1
 
-        if pixel_height < 10:  # Too small to be reliable
+        if pixel_height < 10:  
             return None
 
-        # Real-world height of object
         real_height = self.object_heights[class_name]
 
-        # Distance formula: d = (real_height * focal_length) / pixel_height
         distance = (real_height * self.focal_length) / pixel_height
 
         return distance
@@ -191,19 +173,15 @@ class AdvancedDistanceEstimator:
         """Estimate based on object position in frame (perspective cues)"""
         x1, y1, x2, y2 = bbox
 
-        # Objects lower in frame are generally closer
-        # Normalize y position (0 = top, 1 = bottom)
         center_y = (y1 + y2) / 2
         y_position = center_y / frame_height
 
-        # Simple inverse relationship
-        # Objects at bottom (y=1) are closer
         if y_position > 0.7:
-            return 1.5  # Close
+            return 1.5  
         elif y_position > 0.4:
-            return 3.0  # Medium
+            return 3.0  
         else:
-            return 6.0  # Far
+            return 6.0  
 
     def _smooth_distance(self, track_id: int, current_distance: float) -> float:
         """Apply temporal smoothing using exponential moving average"""
@@ -213,7 +191,6 @@ class AdvancedDistanceEstimator:
         buffer = self.distance_buffers[track_id]
         buffer.append(current_distance)
 
-        # Exponential moving average
         if len(buffer) < 3:
             return current_distance
 
@@ -242,7 +219,6 @@ class AdvancedDistanceEstimator:
         x1, y1, x2, y2 = bbox
         pixel_height = y2 - y1
 
-        # Solve for focal length: f = (d * h_pixels) / h_real
         self.focal_length = (known_distance * pixel_height) / real_height
 
         print(f"✅ Calibrated focal length: {self.focal_length:.1f} pixels")

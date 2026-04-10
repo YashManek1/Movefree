@@ -1,0 +1,587 @@
+MoveFree  - A Multimodal Edge -Based 
+Assistive Navigation System for Visually 
+Impaired Users  
+Yash Manek  
+Department of Computer 
+Engineering  SVKM’s  
+Dwarkadas J. Sanghvi College  
+of Engineering  
+Mumbai, India  
+yashmanek2001@gmail.com  Smit Doshi  
+Department of Computer 
+Engineering  SVKM’s 
+Dwarkadas J. Sanghvi College 
+of Engineering  
+Mumbai, India  
+smitdoshi205 @gmail.com  Sudev Dahitule  
+Department of Computer 
+Engineering  SVKM’s 
+Dwarkadas J. Sanghvi College 
+of Engineering  
+Mumbai, India  
+sudevdahitule06 @gmail.com  Samyak Vishrani  
+Department of Computer 
+Engineering  SVKM’s 
+Dwarkadas J. Sanghvi College 
+of Engineering  
+Mumbai, India  
+samyak .vishrani @gmail.com  
+Dr. Meera Narvekar  
+Department of Computer Engineering  
+SVKM’ s Dwarkadas J. Sanghvi College of Engineering  
+Mumbai, India  
+ 
+Abstract  - MoveFree functions as a navigation assistant 
+which visually impaired users can wear to receive spatial 
+information throughout their journey while maintaining 
+mobility and remote safety supervision. The system 
+combines a custom -trained YOLOv8s outdoor model  
+which detects potholes and road hazards with a 
+YOLOv11m indoor model that recognizes 19 object 
+classes which include furniture and stairs and doors and 
+trip-hazard objects. The hardware system consists of two 
+ergonomic units which include smart  glasses that contain 
+the camera and bone -conduction headphones and 
+microphone and vibration motor and a belt -mounted 
+processing box which houses an NVIDIA Jetson Nano and 
+GPS module and power supply and wireless modules. A 
+companion mobile application pro vides real -time live 
+video streaming of the user's point -of-view to registered 
+caregivers, live GPS location sharing which updates every 
+three to five seconds, and SOS emergency alert dispatch 
+which uses one -tap notifications. The indoor model 
+achieves an overall mAP@0.5 of 81.8% with safety -
+critical performance of 95.0% mAP on stairs and 95.6% 
+on persons, while the outdoor pothole model attains 
+76.69% mAP@0.5 on the test set. The complete inference 
+pipeline operates at approximately 32 to 40 frames per 
+second on the Jetson Nano GPU, and it runs at an 
+estimated 10 to 13 frames per second in prototype 
+Raspberry Pi 5 deployments. MoveFree provides an 
+affordable and scalable mobility solution which uses 
+intelligent context -aware technology to create a system 
+that combines multi -modal sensing with on -device AI 
+inference and caregiver communication  into a single 
+wearable device . 
+Keywords: Assistive technology, Wearable devices, Edge 
+computing, Object detection, YOLO, Navigation systems, 
+GPS tracking, Real -time systems  
+I. INTRODUCTION  The most important obstacle to people who want to 
+travel independently throughout the world exists 
+because of visual impairment. The World Health 
+Organization's World Report on Vision (2019) 
+estimates that approximately 2.2 billion people 
+worldwide experie nce some degree of vision loss 
+which includes at least 36 million people who are 
+classified as blind. India alone accounts for over 12 
+million visually impaired individuals who must 
+navigate public spaces that include unpaved roads 
+unmarked curbs and areas  with heavy pedestrian and 
+vehicular traffic.  
+People use white canes and guide dogs as their main 
+mobility tools because those tools provide basic 
+mobility assistance but they do not help users 
+understand their spatial environment or assist them 
+in finding their way or understanding their 
+surroundings . The Envision Glasses and WeWALK 
+Smart Cane 2.0 commercial smart assistive devices 
+show some advancements over traditional devices 
+but they remain too expensive for most people who 
+live in developing economies while they lack the 
+ability to detect hazards  through multiple methods at 
+the same time and they do not allow caregivers to 
+monitor their patients in real time.  
+MoveFree bridges this gap through its complete 
+wearable system which combines on -device deep -
+learning processing with cloud -based navigation 
+support and a mobile companion application. The 
+system provides a lightweight and ergonomic design 
+where users can extend the system functionality 
+according to their budget needs while maintaining 
+compatibility with Indian urban and semi -urban 
+deployment conditions. The research presents three 
+main contributions which include (1) a dual -model 
+AI architecture that detects outdoor road hazards and 
+indoor structural obstacles (2) a new clock -face 
+spatial guidance algorithm which delivers 
+directiona l audio cues through intuitive sound 
+patterns  (3) Google Gemini Flash system which 
+allows users to access natural -language scene 
+descriptions on -demand  and (4) a live -streaming 
+mobile application delivering real -time POV video, 
+GPS tracking, and SOS alerti ng to caregivers.  
+II. RELATED WORK  
+The training data for your system extends until the 
+month of October in the year 2023. Mukhiddinov 
+and Cho developed a smart -glass system that uses 
+deep learning technology to enhance low -light 
+images and identify 133 different objects while 
+delivering rea l-time text -to-speech services through 
+Bluetooth to a mobile artificial intelligence server. 
+The system achieves high object detection accuracy 
+but it does not include GPS navigation or ultrasonic 
+sensing or caregiver communication capabilities. 
+Gollagi an d his team created smart glasses that use 
+optical character recognition and sonar technology 
+for obstacle detection and RFID/QR codes for 
+navigation yet they could only detect text within a 
+distance of 40 to 150 centimeters and their 
+performance in real -world conditions was 
+inadequate. The smart cane developed by Singh and 
+Rohan used ultrasonic sensors to detect objects up to 
+three meters away while providing haptic feedback 
+but it did not include any systems for understanding 
+visual scenes or helping with navigation tasks. 
+Messaoudi and his team investigated multi -
+technology navigation systems which use Wi -Fi and 
+Bluetooth and GPS and ZigBee technologies to 
+provide location services yet indoor and outdoor 
+navigation capabilities remain divided and these 
+systems consume excessive energy. Nazim et al. 
+created a Raspberry Pi smart glass system that uses 
+Tesseract OCR and YOLOv3 and infrared sensors 
+but it has two to four meters as its maximum obstacle 
+detection range and it processes information at a 
+reduced sp eed. The existing research demonstrates 
+that no technology exists which combines multiple 
+obstacle detection methods together with artificial 
+intelligence scene analysis and GPS navigation and 
+remote caregiver monitoring into a single wearable 
+device which  MoveFree aims to develop.  
+III. SYSTEM ARCHITECTURE  
+A. Physical Design  MoveFree adopts a modular two -unit architecture. 
+The smart glasses unit mounts a Raspberry Pi 
+Camera Module v2 (8 MP, Sony IMX219 sensor, 
+160-degree wide -angle lens) on the frame, providing 
+the primary visual feed to the processing unit. An 
+Adafruit Electr et Microphone Amplifier 
+(MAX4466) captures voice commands and ambient 
+audio. Bluetooth 5.0 bone -conduction headphones 
+deliver audio feedback to the user while keeping the 
+ear canal open for environmental awareness. A 
+vibration motor located near the temple  area delivers 
+additional haptic alerts which indicate directional 
+guidance to users.  
+ 
+Fig1. MoveFree wearable system architecture and hardware 
+components.  
+The belt -mounted box houses an NVIDIA Jetson 
+Nano (quad -core ARM Cortex -A57, 128 -core 
+Maxwell GPU, 4 GB LPDDR4) which functions as 
+the main unit for inference and system coordination. 
+A u-blox NEO -6M GPS module with 2.5 -metre 
+accuracy provides location dat a for both navigation 
+routing and caregiver tracking. Three HC -SR04 
+ultrasonic sensors mounted left, centre, and right 
+cover a 2 cm to 400 cm detection range with ±3 mm 
+accuracy. A rechargeable 5 V –12 V battery pack 
+provides 4 –5 hours of operational autono my. The 
+system uses a Wi -Fi and Bluetooth module to 
+support livestreaming, cloud API access, and mobile 
+connection application.  
+
+ 
+Fig2. MoveFree  system block diagram showing smart glasses 
+and belt -mounted processing unit components.  
+B. Software Stack  
+The Jetson Nano operates Ubuntu 20.04 with 
+JetPack 4.6 that uses CUDA 10.2 and cuDNN 8.2 as 
+its acceleration tools for inference tasks. The main 
+inference system uses Ultralytics 
+YOLOv8/YOLOv11 which has been improved 
+through TensorRT for deployment on edg e devices. 
+The system uses pyttsx3 for offline text -to-speech 
+output while Coqui TTS provides neural -based 
+higher -quality output and gTTS serves as the cloud -
+based backup solution. Google Maps Directions API 
+enables voice -based routing through destination 
+input which uses SpeechRecognition and Google 
+Speech -to-Text for processing. The companion 
+mobile application operates on a Flask streaming 
+backend which delivers MJPEG video and 
+WebSocket location updates and push notifications 
+for SOS events to the Andro id and iOS front -end. 
+IV . AI MODELS AND TRAINING  
+A. Outdoor Model — Pothole and Road Hazard 
+Detection  
+The outdoor detection pipeline uses a YOLOv8s 
+model trained on a custom dataset assembled 
+specifically for Indian road conditions. The dataset 
+comprised 1,595 labelled images with 
+approximately 3,500 instances, which were curated 
+from the Kaggle pothole de tection dataset and 
+enhanced through Roboflow. The dataset was 
+divided into three parts with 87% assigned for 
+training and 8% for validation and 4% for testing. 
+Data augmentation included HSV colour jitter (hue 
+±0.015, saturation ±0.5, value ±0.4) and rand om 
+translation and scaling and shearing and horizontal flipping and mosaic augmentation which had a 
+probability of 0.8. Training ran for 40 epochs on a 
+Tesla T4 GPU using the Ultralytics 8.3.127 
+framework with AdamW optimisation. Researchers 
+chose YOLOv8s because its 11.1 M parameter 
+count and 29 ms per image inference speed allowed 
+real-time deployment on the Jetson Nano.  
+Table I: Outdoor Model (YOLOv8s) Evaluation Metrics  
+Metric  Val 
+Set Test 
+Set Speed  Model 
+Size  
+Precision  72.5%  84.98
+% ~29 
+ms/img  11.1M 
+params  
+Recall  69.4%  64.78
+% ~34 FPS  YOLOv
+8s 
+mAP@0.5  73.85
+% 76.69
+% Jetson 
+Nano  Epochs: 
+40 
+mAP@0.5:0.
+95 43.95
+% 49.79
+% GPU: 
+TensorR
+T Dataset: 
+1,595  
+B. Indoor Model — Structural and Furniture 
+Obstacle Detection  
+The indoor navigation system implements its model 
+through the use of YOLOv11m (medium) which 
+operates on a dataset that includes 52000 images 
+which result from combining five different open -
+source datasets: HomeObjects -3K and Kaggle 
+Indoor Object Detection  and Door/Window/Stairs 
+(DWS) and VisionGuard (blind -assistive -specific 
+objects) and Doors and Stairs YOLO dataset. A 
+unified 19 -class taxonomy was defined comprising: 
+bed, sofa, chair, table, lamp, TV , laptop, wardrobe, 
+window, door, potted plant, photo f rame, person, 
+stairs, trash can, shoe, cabinet, shelf, and 
+refrigerator. An intelligent class -remapping pipeline 
+handled heterogeneous label schemas across source 
+datasets using both exact and fuzzy synonym 
+matching. The training process used three methods  
+for data augmentation which included Mosaic (1.0) 
+and MixUp (0.15) and ±15 -degree rotation to create 
+head movement jitter that resembles real -world 
+conditions found in wearable cameras. The research 
+selected YOLOv11m for use because it 
+outperformed both n ano and small variants by 
+providing better recall results for stairs and doors 
+which are critical to safety design.  
+Table II: Indoor Model (YOLOv11m) Per -Class mAP@0.5 — Key 
+classes  
+
+ 
+* Stairs mAP reflects specialised training 
+configuration with targeted augmentation for fall -
+prevention class.  
+V . KEY FEATURES AND NOVELTY  
+A. Dual -Model Hybrid Inference  
+The context -aware model switching strategy of 
+MoveFree uses YOLOv8s to monitor outdoor road 
+conditions which include potholes and uneven 
+surfaces and vehicles and pedestrians. The indoor 
+mode of YOLOv11m permits it to process all 
+structural scene elements which include stairs 
+(95.0% mAP), doors, furniture, and person 
+proximity. The Jetson Nano operates both models 
+through frame -skipping optimisation which 
+processes one complete inference frame for every 
+three frames while using cached detection boxes for 
+the remaining frames. The system achieves 32 to 40 
+frames per second display -rendered throughput 
+while processing each frame with less than 50 
+milliseconds inference latency.  
+B. Clock -Face Spatial Guidance System  
+You have acquired your training based on data which 
+exists until the month of October in the year 2023. A 
+custom post -processing algorithm converts the (x, y) 
+centroid coordinates of each detected bounding box 
+into a clock -position directional cue which sh ows 
+the direction of the user's field of view. Objects 
+detected at the horizontal centre are announced as 
+'12 o'clock', those at the left quarter as '10 o'clock', and those to the right as '2 o'clock', with intermediate 
+values filling the angular spectrum.  The approach 
+establishes a better cognitive performance because it 
+enables users to understand spatial locations through 
+existing mental frameworks which they already 
+understand. The system announces 'Stairs at 11 
+o'clock, 2.1 metres' which provides a cle arer 
+direction than 'Stairs ahead -left'. 
+C. Generative AI Scene Understanding  
+The system uses voice commands which include 
+'Describe scene', 'Read text', 'Find exits', and 'Check 
+hazards' to take the current camera frame and send it 
+to the Google Gemini 2.5 Flash endpoint through 
+asynchronous transmission. The model provides a 
+conte xt-based natural -language description which 
+gets converted into speech output through bone -
+conduction headphones within a time frame of two 
+to four seconds. The system enables users to 
+navigate between two extreme object classifications 
+and comprehensive e nvironmental comprehension 
+which allows them to resolve situations where their 
+environment lacks clear context. The system allows 
+users to identify whether a door is open or closed and 
+read a signboard and find an empty chair in a 
+crowded room which sensor -based methods cannot 
+solve.  
+D. Three -Axis Ultrasonic Sensor Fusion  
+The belt unit uses three ultrasonic sensors which 
+operate in a left -centre -right configuration. The 
+sensors operate at 20 Hz to detect distances between 
+2 cm and 400 cm with ±3 mm accuracy. The sensor 
+fusion logic operates as a safety override layer: if 
+any sensor detects an obstacle which exists below 
+1.0 metre distance  then a priority voice alert 
+announces the obstacle and both vibration motors 
+activate simultaneously because the vision pipeline 
+remains inactive. This redundancy is essential for 
+detecting  obstacles which remain hidden from the 
+camera, such as glass panels and transparent 
+barriers, as well as objects that exist outside the 
+camera's field of view which all camera -only 
+assistive systems have documented.  
+E. Mobile Companion Application — Live Feed, 
+GPS, and SOS  
+The Jetson Nano runs a Flask -based MJPEG 
+streaming server which broadcasts the user's camera 
+feed through port 5000. The companion mobile 
+application connects to this stream over the local Wi -
+Fi network or via a secure tunnel when outside the 
+home, providi ng caregivers with a real -time point -
+of-view video stream of the user's environment with Class  mAP@0.
+5 Precisio
+n Recal
+l Safety 
+Priority  
+Stairs  95.0%*  66.3%  39.6
+% Critical:  
+Fall 
+Preventio
+n 
+Person  83.6%  96.7%  94.1
+% Critical:  
+Collision  
+Shoe  81.4%  98.0%  93.6
+% High: 
+Trip 
+Hazard  
+Door  41.7%  63.4%  56.2
+% High: 
+Exit 
+Finding  
+Overall 
+mAP@0.
+5 81.8%  80.4%  76.4
+% F1: 
+78.4%  
+a target latency below three seconds and stream 
+stability for sustained periods exceeding five 
+minutes in testing. The GPS location, which the 
+application receives from the u -blox NEO -6M 
+module, transmits its data through a WebSocket 
+channel and updates ev ery three to five seconds 
+while displaying on an embedded map view. The 
+device itself and the caregiver application provide 
+access to an SOS emergency alert button which 
+users can activate using voice command 'SOS' or a 
+dedicated hardware button. When user s activate 
+SOS the system sends a push notification to all 
+family contacts who registered with the user's 
+current GPS coordinates and camera snapshot, and a 
+brief AI -generated scene description. The system 
+establishes a complete safety protection system 
+which protects users who face dangerous conditions 
+or need to navigate unknown territories.  
+F. V oice -Controlled Interface  
+The voice control system enables users to operate 
+the complete system through voice commands 
+which use the SpeechRecognition library together 
+with Google Speech -to-Text technology. The 
+system recognizes commands which include: 
+Navigate (destination input),  Find [object], 
+Describe (Gemini scene description), Read (text 
+recognition), Hazards (safety check), Exits (door 
+location), Stop, Calibrate, and SOS. The 
+conversational AI system sends unrecognized 
+speech to Gemini 2.5 Flash together with the 
+current came ra shot to obtain contextual answers 
+which permit users to speak freely about their 
+surroundings.  
+VI. DATASETS  
+The following datasets were used in training and 
+evaluation:  
+• Pothole Detection Dataset (Kaggle, 
+andrewmvd): 1,595 labelled images, ~3,500 
+instances, PASCAL VOC format converted to 
+YOLOv8 annotations.  
+• HomeObjects -3K: Common residential 
+furniture across diverse indoor scenes.  
+• Kaggle Indoor Object Detection (thepbordin): 
+General indoor obstacle detection.  
+• Door/Window/Stairs Dataset (DWS): 
+Structural indoor elements critical for 
+navigation safety.  
+• VisionGuard: Blind -assistive -specific object 
+classes sourced from real assistive -technology 
+scenarios.  
+• Doors and Stairs YOLO Dataset: Specialised 
+detection for critical safety classes.  • Footpath Guide Dataset (Roboflow, footpath -
+guide -2): Indian footpath conditions including 
+kerbs and pedestrian crossings.  
+• Car Object Detection Dataset (Kaggle, 
+sshikamaru): Vehicle detection for road -
+crossing safety.  
+• Traffic Light Dataset (Roboflow, 
+yolov801/trafik_isiklari): Traffic signal state 
+classification.  
+The dataset transformation process created unified 
+indoor classification system with 19 distinct classes 
+together with outdoor hazard identification system 
+which enabled training from multiple sources 
+without facing class -ID conflicts . 
+VII. EXPERIMENTAL RESULTS AND 
+PERFORMANCE  
+The outdoor YOLOv8s model was tested using a 
+dedicated testing dataset which contained 67 
+images. The system demonstrated strong pothole 
+detection performance across different lighting 
+conditions and road surface types according to its 
+test set precision w hich reached 84.98% and its 
+mAP@0.5 score of 76.69%. The indoor YOLOv11m 
+model achieved an mAP@0.5 score of 81.8% and an 
+mAP@0.5:0.95 score of 64.9% when tested on the 
+combined validation dataset which showed excellent 
+performance for photo frames (85.5%),  persons 
+(83.6%), shoes (81.4%), and potted plants (80.0%) 
+categories. The specialised training configuration 
+achieved a 95.0% mAP@0.5 score because 
+researchers supplemented their training data with 
+specific stair safety -critical class training material. 
+Future training sessions will focus on improving 
+door detection which currently achieves 41.7% mAP 
+and laptop detection which achieves 37.8% mAP 
+through the collection of specialized training data.  
+The Jetson Nano GPU showed an inference speed of 
+30.8 milliseconds per frame which corresponds to 
+32.4 frames per second during its first evaluation but 
+this improved to 24.9 milliseconds per frame which 
+equals 40.2 frames per second after optimizing with 
+TensorRT which proved the system could operate in 
+real-time. The Raspberry Pi 5 prototype 
+deployments established a performance range of 
+10.8 to 13.4 FPS which allowed the system to 
+maintain navigational safety awareness but fell short 
+of reaching the desi red 24 FPS performance level 
+that future hardware versions would achieve. The 
+testing of ultrasonic sensor integration showed that 
+it could produce audio alerts within one second after 
+detecting obstacles. The mobile livestream achieved 
+a mean end -to-end l atency of under three seconds on 
+local Wi -Fi and stable streaming for sessions 
+exceeding five minutes in all test cases. The system 
+dispatched SOS alerts which included GPS 
+coordinates and AI scene descriptions within three 
+to five seconds after users activated the emergency 
+function.  
+VIII. SYSTEM LIMITATIONS AND FUTURE 
+WORK  
+The development and testing process has unveiled 
+multiple existing limitations. The door detection 
+system achieves 41.7% mAP accuracy which stays 
+below the 70% safety threshold because the training 
+datasets contain various door types and the system 
+lacks s pecific data to distinguish between open and 
+closed door states. The stairs system achieves 39.6% 
+recall because it fails to detect objects that exist in 
+low-contrast or cluttered backgrounds despite 
+achieving high mAP results through its specialised 
+setup  which requires real indoor environment data 
+for better performance. The existing system needs 
+active internet access to use Google Maps 
+navigation and Gemini scene descriptions and cloud 
+speech recognition services while upcoming updates 
+will introduce of fline text -to-speech functionality 
+through Coqui Neural TTS and local whisper -based 
+speech recognition and pre -stored navigation for 
+recognized paths.  
+The planned extensions will use the trained traffic 
+signal dataset to identify traffic light states for safer 
+road crossing and they will introduce multi -language 
+voice interface support which will start with Hindi 
+and Marathi for Indian users and they wil l develop 
+indoor precision positioning systems through QR -
+code and RFID technology for areas that lack GPS 
+coverage and they will create fall detection systems 
+which will use IMU accelerometer data from the belt 
+unit and they will implement an automatic 
+emergency SOS escalation system which will 
+activate when the user stays still for a user -defined 
+period without any activity.  
+IX. CONCLUSION  
+MoveFree shows that a practical, affordable, and 
+smart wearable navigation system for visually 
+impaired people can be developed through the 
+combination of edge AI inference and multi -modal 
+sensor fusion and cloud -powered navigation and 
+mobile caregiver con nections. The system uses two 
+different models because YOLOv8s detects outdoor 
+dangers and YOLOv11m identifies indoor barriers 
+which create continuous safety monitoring for both 
+outdoor and indoor environments. The companion 
+mobile application provides bet ter spatial 
+communication through its live video streaming and GPS tracking and SOS alert system than current 
+assistive devices. The research will begin to develop 
+a complete autonomous mobility solution for 
+visually impaired people through two main 
+objectives which are to build stronger door and stair 
+detection syste ms and to create navigation elements 
+that operate without cloud services while including 
+traffic signal recognition and fall detection 
+capabilities.  
+ACKNOWLEDGEMENT  
+The authors convey their gratitude to Dr. Meera 
+Narvekar who serves as Head of Computer 
+Engineering Department at DJSCE because she 
+provided them assistance during their entire research 
+process. The authors acknowledge the open -source 
+dataset providers on Kaggle and Roboflow whose 
+contributions made the training of domain -specific 
+models possible.  
+REFERENCES  
+[1] World Health Organization, "World Report on 
+Vision," WHO, Geneva, 2019  
+[2] M. Mukhiddinov  and J. Cho, "Smart Glass 
+System Using Deep Learning for the Blind and 
+Visually Impaired," Electronics, 2022.  
+[3] S. G. Gollagi et al., "An Innovative Smart Glass 
+for Blind People Using AI," ResearchGate, 2022.  
+[4] V . Singh and R. Paul, "Smart Cane for the Visually 
+Impaired," International Journal of Engineering 
+Research, 2021.  
+[5] M. D. Messaoudi, B. -A. J. Menelas, and H. 
+Mcheick, "Review of Navigation Assistive Tools and 
+Technologies for the Visually Impaired," Applied 
+Sciences, 2022.  
+[6] S. Nazim et al., "Smart Glasses: A Visual Assistant 
+for the Blind," IEEE, 2023.  
+[7] C. K. M. Lee et al., "Achieving Eco -Innovative 
+Smart Glass Design with the Integration of Opinion 
+Mining, QFD, and TRIZ," Journal of Cleaner 
+Production, 2022.  
+[8] Ultralytics, "YOLOv8 & YOLOv11 
+Documentation," 2024 . 
+[9] Google DeepMind, "Gemini AI Models," 2024.  
+[10] NVIDIA, "Jetson Nano Developer Kit," NVIDIA 
+Corporation, 2023 . 
+[11] J. Zhang et al., "Computer Vision for Assistive 
+Technologies," PMC, 2022 . 
+[12] Y . Liu et al., "YOLO -based Object Detection for 
+the Visually Impaired," Electronics, MDPI, vol. 10, 
+no. 22, 2021.  
+ 

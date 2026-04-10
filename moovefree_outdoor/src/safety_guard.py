@@ -2,7 +2,6 @@ import time
 import cv2
 import numpy as np
 
-
 class OutdoorSafetyMonitor:
     def __init__(self, audio_interface):
         self.audio = audio_interface
@@ -12,7 +11,6 @@ class OutdoorSafetyMonitor:
         """Analyze YOLO results for outdoor hazards"""
         now = time.time()
 
-        # 1. Traffic Light Logic (Class ID 9 in COCO)
         for box in result.boxes:
             cls_id = int(box.cls[0])
             label = result.names[cls_id]
@@ -28,11 +26,10 @@ class OutdoorSafetyMonitor:
                     )
                     self.last_warning = now
 
-            # 2. Vehicle Proximity (Potholes/Cars)
             if label in ["car", "bus", "truck", "pothole"]:
-                # Check bounding box height ratio
+
                 h_ratio = float(box.xywh[0][3]) / frame.shape[0]
-                if h_ratio > 0.4:  # Takes up 40% of screen height = Close
+                if h_ratio > 0.4:  
                     if now - self.last_warning > 3:
                         self.audio.speak(
                             f"Caution. {label} is very close.", priority=True
@@ -47,7 +44,6 @@ class OutdoorSafetyMonitor:
 
         hsv = cv2.cvtColor(roi, cv2.COLOR_BGR2HSV)
 
-        # Red Masks
         lower_red1 = np.array([0, 70, 50])
         upper_red1 = np.array([10, 255, 255])
         lower_red2 = np.array([170, 70, 50])
@@ -57,7 +53,6 @@ class OutdoorSafetyMonitor:
             cv2.inRange(hsv, lower_red2, upper_red2),
         )
 
-        # Green Mask
         lower_green = np.array([40, 70, 50])
         upper_green = np.array([90, 255, 255])
         mask_green = cv2.inRange(hsv, lower_green, upper_green)

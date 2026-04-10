@@ -15,7 +15,6 @@ from collections import defaultdict
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class IntelligentDatasetMerger:
     def __init__(self, base_path="datasets/moovefree_combined"):
         self.base_path = Path(base_path)
@@ -23,7 +22,6 @@ class IntelligentDatasetMerger:
         self.labels_dir = self.base_path / "labels"
         self.temp_dir = Path("datasets/temp_downloads")
 
-        # Our unified 19-class schema (TARGET)
         self.unified_classes = {
             0: "bed",
             1: "sofa",
@@ -46,10 +44,8 @@ class IntelligentDatasetMerger:
             18: "refrigerator",
         }
 
-        # Reverse lookup: class_name -> unified_id
         self.unified_name_to_id = {v: k for k, v in self.unified_classes.items()}
 
-        # Statistics tracking
         self.stats = defaultdict(lambda: {"total": 0, "mapped": 0, "unmapped": 0})
 
     def setup_dirs(self):
@@ -109,25 +105,24 @@ class IntelligentDatasetMerger:
         """
         name_lower = dataset_name.lower()
 
-        # Define inference rules
         if "door" in name_lower and "window" in name_lower and "stair" in name_lower:
-            # DoorWindowStairs dataset
+
             return {0: "door", 1: "window", 2: "stairs"}
 
         elif "door" in name_lower:
-            # Pure door dataset
+
             return {0: "door"}
 
         elif "stair" in name_lower:
-            # Pure stairs dataset
+
             return {0: "stairs"}
 
         elif "window" in name_lower:
-            # Pure window dataset
+
             return {0: "window"}
 
         elif "visionguard" in name_lower or "object" in name_lower:
-            # Multi-object dataset - try to infer from folder structure
+
             return self._infer_from_structure(dataset_name)
 
         return None
@@ -136,8 +131,7 @@ class IntelligentDatasetMerger:
         """
         Try to infer classes from folder names (Batch 1, Batch 2, etc.)
         """
-        # For VisionGuard: it's a multi-class dataset, we'll use all our classes
-        # and let the validation phase filter out
+
         logger.info(f"   Using full class schema for {dataset_path}")
         return self.unified_classes
 
@@ -146,11 +140,10 @@ class IntelligentDatasetMerger:
         Create mapping from dataset's class IDs to our unified class IDs
         NOW WITH FALLBACK INFERENCE
         """
-        # Try YAML first
+
         if dataset_config and "names" in dataset_config:
             return self._map_from_yaml(dataset_config, dataset_name)
 
-        # Fallback: Infer from dataset name/structure
         logger.warning(f"⚠️ {dataset_name}: No YAML found, using inference")
         inferred_classes = self.infer_classes_from_dataset_name(dataset_name)
 
@@ -167,7 +160,6 @@ class IntelligentDatasetMerger:
         """Map classes from YAML configuration"""
         dataset_classes = dataset_config["names"]
 
-        # Handle both dict and list formats
         if isinstance(dataset_classes, dict):
             dataset_id_to_name = dataset_classes
         elif isinstance(dataset_classes, list):
@@ -182,12 +174,10 @@ class IntelligentDatasetMerger:
         for orig_id, orig_name in dataset_id_to_name.items():
             orig_name_clean = orig_name.lower().strip()
 
-            # Direct match first
             if orig_name_clean in self.unified_name_to_id:
                 mapping[int(orig_id)] = self.unified_name_to_id[orig_name_clean]
                 continue
 
-            # Fuzzy matching for common variations
             matched = False
             for unified_name, unified_id in self.unified_name_to_id.items():
                 if self._fuzzy_match(orig_name_clean, unified_name):
@@ -214,11 +204,10 @@ class IntelligentDatasetMerger:
         for orig_id, class_name in inferred_classes.items():
             class_name_clean = class_name.lower().strip()
 
-            # Direct lookup
             if class_name_clean in self.unified_name_to_id:
                 mapping[int(orig_id)] = self.unified_name_to_id[class_name_clean]
             else:
-                # Fuzzy match
+
                 for unified_name, unified_id in self.unified_name_to_id.items():
                     if self._fuzzy_match(class_name_clean, unified_name):
                         mapping[int(orig_id)] = unified_id
@@ -228,15 +217,13 @@ class IntelligentDatasetMerger:
 
     def _fuzzy_match(self, name1, name2):
         """FIXED: Proper fuzzy matching with explicit synonym dictionary"""
-        # Normalize names
+
         n1 = name1.replace(" ", "").replace("_", "").replace("-", "").lower()
         n2 = name2.replace(" ", "").replace("_", "").replace("-", "").lower()
 
-        # Exact match after normalization
         if n1 == n2:
             return True
 
-        # COMPREHENSIVE SYNONYM MAPPING
         synonym_map = {
             "sofa": ["couch", "settee", "divan"],
             "tv": ["television", "screen", "monitor", "display"],
@@ -273,24 +260,20 @@ class IntelligentDatasetMerger:
             "shelf": ["shelves", "rack", "bookshelf"],
         }
 
-        # Check if n1 or n2 match any key or value in synonym map
         for target_class, synonyms in synonym_map.items():
             target_normalized = target_class.replace(" ", "")
             synonyms_normalized = [s.replace(" ", "") for s in synonyms]
 
-            # Check if n1 is target and n2 is synonym (or vice versa)
             if (n1 == target_normalized and n2 in synonyms_normalized) or (
                 n2 == target_normalized and n1 in synonyms_normalized
             ):
                 return True
 
-            # Check if both are synonyms of the same target
             if n1 in synonyms_normalized and n2 in synonyms_normalized:
                 return True
 
-            # Check if one is target and other contains it (but not cross-contamination)
             if n1 == target_normalized and target_normalized in n2:
-                # Make sure it's not a false positive (door in window)
+
                 if not any(
                     bad in n2
                     for bad in ["window", "wall", "floor"]
@@ -327,21 +310,18 @@ class IntelligentDatasetMerger:
 
                 orig_class_id = int(parts[0])
 
-                # Check if we can map this class
                 if orig_class_id not in class_mapping:
-                    # This object class is not in our schema, skip this annotation
+
                     continue
 
-                # Remap the class ID
                 new_class_id = class_mapping[orig_class_id]
 
-                # Validate bbox format
                 if len(parts) != 5:
                     continue
 
                 try:
                     bbox = [float(x) for x in parts[1:5]]
-                    # Validate YOLO format (0-1 range)
+
                     if all(0 <= coord <= 1 for coord in bbox):
                         new_lines.append(f"{new_class_id} {' '.join(parts[1:])}\n")
                 except ValueError:
@@ -363,10 +343,8 @@ class IntelligentDatasetMerger:
         logger.info(f"🔄 Processing: {dataset_name}")
         logger.info(f"{'='*60}")
 
-        # Try to find and load dataset YAML
         dataset_config = self.find_yaml_in_dataset(source)
 
-        # Create class mapping (with fallback inference)
         class_mapping = self.create_class_mapping(dataset_config, dataset_name, source)
 
         if class_mapping is None:
@@ -375,7 +353,6 @@ class IntelligentDatasetMerger:
             )
             return
 
-        # Find all images
         all_images = []
         for ext in ["*.jpg", "*.png", "*.jpeg", "*.JPG", "*.PNG"]:
             all_images.extend(list(source.rglob(ext)))
@@ -386,7 +363,6 @@ class IntelligentDatasetMerger:
 
         logger.info(f"📸 Found {len(all_images)} images")
 
-        # Shuffle for random train/val/test split
         random.shuffle(all_images)
         n = len(all_images)
         train_end = int(n * 0.8)
@@ -398,7 +374,6 @@ class IntelligentDatasetMerger:
             "test": all_images[val_end:],
         }
 
-        # Process each split
         for split_name, img_list in splits.items():
             count = self._process_split(
                 img_list, split_name, class_mapping, dataset_name
@@ -414,18 +389,17 @@ class IntelligentDatasetMerger:
         count = 0
         for img_file in image_files:
             try:
-                # Find corresponding label
+
                 lbl_file = self._find_label_file(img_file)
 
                 if lbl_file and lbl_file.exists():
-                    # Remap label file
+
                     new_label_lines = self.remap_label_file(lbl_file, class_mapping)
 
                     if new_label_lines:
-                        # Generate unique filename to avoid collisions
+
                         unique_name = f"{dataset_name.lower().replace('-', '_')}_{img_file.stem}_{count}"
 
-                        # Copy image
                         dest_img = (
                             self.images_dir
                             / split_name
@@ -433,7 +407,6 @@ class IntelligentDatasetMerger:
                         )
                         shutil.copy(img_file, dest_img)
 
-                        # Write remapped label
                         dest_lbl = self.labels_dir / split_name / f"{unique_name}.txt"
                         with open(dest_lbl, "w") as f:
                             f.writelines(new_label_lines)
@@ -448,17 +421,15 @@ class IntelligentDatasetMerger:
 
     def _find_label_file(self, img_path):
         """Find label file using multiple strategies"""
-        # Strategy 1: Same folder
+
         lbl = img_path.with_suffix(".txt")
         if lbl.exists():
             return lbl
 
-        # Strategy 2: Child 'labels' folder
         lbl = img_path.parent / "labels" / img_path.with_suffix(".txt").name
         if lbl.exists():
             return lbl
 
-        # Strategy 3: Parallel 'labels' folder (Standard YOLO)
         try:
             parts = list(img_path.parts)
             for i in range(len(parts) - 1, -1, -1):
@@ -471,7 +442,6 @@ class IntelligentDatasetMerger:
         except:
             pass
 
-        # Strategy 4: Sibling 'labels' folder
         try:
             labels_dir = img_path.parent.parent / "labels"
             if labels_dir.exists():
@@ -481,7 +451,6 @@ class IntelligentDatasetMerger:
         except:
             pass
 
-        # Strategy 5: Root-level labels folder (search up to 5 levels)
         try:
             current = img_path.parent
             for _ in range(5):
@@ -535,9 +504,8 @@ class IntelligentDatasetMerger:
 
         logger.info(f"{'='*60}\n")
 
-
 def main():
-    # Authenticate Kaggle
+
     try:
         kaggle.api.authenticate()
         logger.info("✅ Kaggle authenticated")
@@ -549,45 +517,35 @@ def main():
     merger = IntelligentDatasetMerger()
     merger.setup_dirs()
 
-    # Process datasets (in order of quality/relevance)
-
-    # 1. HomeObjects-3K (if you have it locally)
     if Path("homeobjects-3K").exists():
         merger.process_dataset("homeobjects-3K", "HomeObjects")
 
-    # 2. Kaggle Indoor Detection
     p1 = merger.download_kaggle("thepbordin/indoor-object-detection", "kaggle_indoor")
     if p1:
         merger.process_dataset(p1, "KaggleIndoor")
 
-    # 3. Door/Window/Stairs Combined
     p2 = merger.download_kaggle("nderalparslan/dwsonder", "dw_stairs")
     if p2:
         merger.process_dataset(p2, "DoorWindowStairs")
 
-    # 4. Doors Specialized
     p3 = merger.download_kaggle("sayedmohamed1/doors-detection", "doors_yolo")
     if p3:
         merger.process_dataset(p3, "DoorsYOLO")
 
-    # 5. Stairs Specialized
     p4 = merger.download_kaggle("samuelayman/stairs", "stairs_yolo")
     if p4:
         merger.process_dataset(p4, "StairsYOLO")
 
-    # 6. VisionGuard Multi-Class
     p5 = merger.download_kaggle("samuelayman/object-detection", "visionguard")
     if p5:
         merger.process_dataset(p5, "VisionGuard")
 
-    # Create final YAML
     merger.create_yaml()
     merger.print_statistics()
 
     logger.info("🎉 INTELLIGENT DATASET MERGE COMPLETE!")
     logger.info("✅ All class IDs have been remapped to unified schema")
     logger.info("✅ Ready for training with correct labels")
-
 
 if __name__ == "__main__":
     main()

@@ -6,57 +6,63 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 class StreamLoader:
-    def __init__(self, source):
+    def __init__(self, source, reconnect_delay=2.0, max_reconnect_delay=30.0):
         self.source = source
-        self.q = queue.Queue(maxsize=1)  # Only keep the LATEST frame
+        self.reconnect_delay = reconnect_delay
+        self.max_reconnect_delay = max_reconnect_delay
+        self._frame_queue = queue.Queue(maxsize=2)
         self.running = True
         self.connected = False
+        self._thread = threading.Thread(target=self._capture_loop, daemon=True)
+        self._thread.start()
 
-        # Start connection in background
-        self.thread = threading.Thread(target=self._update, daemon=True)
-        self.thread.start()
+    def _open_capture(self):
+        if isinstance(self.source, str) and self.source.startswith('http'):
+            cap = cv2.VideoCapture(self.source, cv2.CAP_FFMPEG)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+            cap.set(cv2.CAP_PROP_FPS, 30)
+        else:
+            cap = cv2.VideoCapture(self.source)
+            cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        return cap
 
-    def _update(self):
+    def _capture_loop(self):
+        delay = self.reconnect_delay
         while self.running:
-            try:
-                cap = cv2.VideoCapture(self.source)
-                if not cap.isOpened():
-                    logger.warning(f"⚠️ Connection failed: {self.source}. Retrying...")
-                    time.sleep(2)
-                    continue
+            cap = self._open_capture()
+            if not cap.isOpened():
+                logger.warning(f'Stream unavailable: {self.source}. Retrying in {delay:.0f}s')
+                time.sleep(delay)
+                delay = min(delay * 1.5, self.max_reconnect_delay)
+                continue
 
-                self.connected = True
-                logger.info("✅ Camera Connected")
+            self.connected = True
+            delay = self.reconnect_delay
+            logger.info('Camera connected.')
 
-                while self.running and cap.isOpened():
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
+            while self.running:
+                ret, frame = cap.read()
+                if not ret:
+                    break
+                try:
+                    self._frame_queue.get_nowait()
+                except queue.Empty:
+                    pass
+                self._frame_queue.put(frame)
 
-                    # Force empty the queue to drop old frames (Key to fixing lag)
-                    if not self.q.empty():
-                        try:
-                            self.q.get_nowait()
-                        except queue.Empty:
-                            pass
+            cap.release()
+            self.connected = False
+            if self.running:
+                logger.warning('Stream lost. Reconnecting...')
+                time.sleep(delay)
 
-                    self.q.put(frame)
-
-                cap.release()
-                self.connected = False
-            except Exception as e:
-                logger.error(f"Stream Error: {e}")
-                time.sleep(1)
-
-    def read(self):
+    def read(self, timeout=1.0):
         try:
-            return self.q.get(timeout=1)  # Wait max 1s for a frame
+            return self._frame_queue.get(timeout=timeout)
         except queue.Empty:
             return None
 
     def stop(self):
         self.running = False
-        if hasattr(self, "thread"):
-            self.thread.join(timeout=1)
+        self._thread.join(timeout=2)

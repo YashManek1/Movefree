@@ -1,0 +1,1226 @@
+  
+ 
+University of Mumbai  
+2025 – 2026 
+ 
+ 
+ 
+ 
+MoveFre e 
+  
+ 
+Submitted in partial fulfillment of the  requirement s  
+of the course Innov ative Product Development -III 
+ 
+ 
+Year 3, Sem V Computer Engineering  
+ 
+By 
+ 
+Samyak Vishrani   60004230016  
+Smit Doshi     60004230225  
+Sudev Dahitule    60004230171  
+Yash Manek    60004230019  
+ 
+ 
+ 
+Guide : 
+ 
+ 
+ Dr. Meera Narvekar  
+Head of Department,  
+ Computer Engineering  
+ 
+
+  
+ 
+ 
+ 
+ 
+ 
+ 
+CERTIFICATE  
+                                                          
+ 
+This is to certify that the project entitled  “MoveFree ” is a bonafide work of  SAMYAK 
+VISHRANI (60004230016), SMIT DOSHI (60004230225), SUDEV DAHITULE 
+(60004230171), YASH MANEK (60004230019)  submitted as a project work for the course 
+Innovative Product Development -III, Year 3, Semester V, TY B.Tech Computer Engineering  
+ 
+ 
+ 
+ 
+ 
+ 
+___________________________  
+Name of Guide  
+Dr. Meera Narvekar  
+ 
+ 
+ 
+    
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+            Dr. Meera Narvekar                                         Dr. Hari Vasudevan  
+            Head  of Department                                                                                   Principal  
+  
+ 
+      
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+IPD Project Report Approval for BTech Semester V  
+ 
+ 
+This project report entitled ( MoveFree ) by, Yash Manek , Samyak Vishrani, 
+Smit Doshi, Sudev Dahitule  is approved for the Innovative Product 
+Development -III, Year 3, Semester V, TY B.Tech Computer Engineering  
+ 
+ 
+ 
+Examiners  
+1.---------------------------------------------   
+2.---------------------------------------------   
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Date:  
+Place:  
+ 
+ 
+ 
+ 
+ 
+  
+Declaration  
+We declare that this written submission represents our ideas in our own words 
+and where others' ide as or words have been included. We have adequately cited and 
+referenced the original sources. We also declare that We have adhered to all 
+principles of academic honesty and integrity and have not misrepresented or 
+fabricated or falsified any idea/data/fact/source in our submission. We understand 
+that any violation of the above will be cause for disciplinary action by the Institute 
+and can also evoke penal action from the sources which have thus not been properly 
+cited or from  whom proper permission has not been taken when needed.  
+ 
+-----------------------------------------   
+Samyak Vishrani 60004230016  
+ 
+-----------------------------------------   
+Smit Doshi 60004230225   
+ 
+-----------------------------------------   
+Sudev Dahitule 60004230171   
+ 
+-----------------------------------------   
+Yash Manek 60004230019  
+ 
+ 
+ 
+Date:  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+ Abstract  
+ 
+Navigating public spaces can be a daunting task for individuals who are blind or visually 
+impaired, especially in dynamic environments such as busy urban areas, transportation 
+systems, and unfamiliar roads. Existing navigation aids often rely on static or limited 
+guidance, failing to provide real -time, intelligent, and context -aware assistance.  
+MoveFree is an innovative navigation assistant designed to empower visually impaired 
+individuals by enhancing their mobility, independence, and safety using real -time 
+technologies. It integrates ultrasonic sensors, a YOLOv8[8] computer vision model, Google 
+Maps navigation, voice interaction, and live video streaming, all embedded in a wearable 
+system comprising smart glasses and a belt -attached processing unit.  
+The ultrasonic sensors detect obstacles in close range and issue immediate voice alerts to 
+the user, preventing collisions. For advanced object detection like potholes and vehicles, 
+MoveFree uses a lightweight YOLOv8 model for real -time visual analysis thr ough the 
+onboard camera. In parallel, Google Maps provides spoken turn -by-turn navigation by 
+accepting voice -based destination input, allowing hands -free interaction.  
+To enhance safety, the system features real -time location sharing and live POV streaming 
+to a mobile app used by family members or caregivers. This allows remote monitoring and 
+intervention if necessary, creating a secure safety net for the user in crowded  or unfamiliar 
+locations.  
+The system is designed to be compact, wearable, and responsive —smart glasses include 
+the camera and audio output, while the belt unit handles processing, GPS, and power 
+supply. The solution also supports future extensions such as traffic light recognition and 
+AI-based road crossing assistance.  
+In summary, MoveFree offers a smart, scalable, and practical assistive technology solution. 
+By combining multi -modal obstacle detection, AI -powered visual processing, and 
+seamless communication features, it empowers the visually impaired to move confidentl y 
+and safely in complex real -world environments.  
+ 
+Keywords:  Ultrasonic Sensors, Navigation Assistant, Object Detection, Wearable 
+Devices, Safety  
+  
+ Contents  
+Chapter  Contents  Page 
+No. 
+I List of Table  i 
+II List of Abbreviations  ii 
+III List of Figures  iii 
+   
+1 SURVEY CONDUCTED   
+ 1.1 Field Survey  1 
+ 1.2 Literature Survey  2 
+ 1.3 Outcome of Survey  5 
+2 NEED OF THE PROJECT   
+ 2.1 Introduce your product and need of the product  7 
+ 2.2 Analysis of Existing Systems   8 
+ 2.3 Applications of the product  11 
+3 PROBLEM FORMULATION    
+ 3.1 Problem Formulation   13 
+ 3.2 Product objectives   13 
+ 3.3 Applications of the product   13 
+ 3.4 Novelty  14 
+ 3.5 Scope of the project    14 
+4 PROPOSED DESIGN   15 
+5 IMPLEMENTATION  18 
+6  EXPERIMENTATION & RESULTS   
+ 6.1 Datasets/Tables  22 
+ 6.2 Test cases  26 
+7 REFERENCES / BIBLIOGRAPHY   29 
+8 APPENDIX – A 30 
+9 APPENDIX - B 32 
+   
+   
+   
+   
+   
+   
+   
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+List of Tables  
+ 
+ 
+Table  
+No. Title  Page No  
+3.1 Scope of the Project  14 
+5.1 Evaluation Metrics  19 
+6.1 Obstacle Detection Ultrasonic Sensors Test Case  26 
+6.2 Obstacle Detection Yolo Test Case  26 
+6.3 Voice Command Test Case  26 
+6.4 Navigation Test Case  27 
+6.5 Livestreaming Test Case  27 
+6.6 Live Location Sharing Test Case  27 
+6.7 Battery and Power Test Case  28 
+6.8 System Boot and Connectivity Test Case  28 
+6.9 Road Crossing Detection Test Case  28 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+i 
+ List of Abbreviations  
+ 
+ 
+Sr. No.  Abbreviation  Expanded form  
+1 AI Artificial Intelligence  
+2 GPS Global Positioning System  
+3 ML Machine Learning  
+4 IoT Internet of Things  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ii 
+ List of Figures  
+ 
+ 
+Figure  No. Title  Page No  
+4.1 Proposed System Architecture  15 
+4.2 Block Diagram of Hardware Components  17 
+5.1 Pothole Detection  20 
+5.2 Pothole Detection  20 
+6.1 Pothole Dataset  22 
+6.2 Footpath Dataset  23 
+6.3 Car Object Dataset  23 
+6.4 Human Face Dataset  24 
+6.5 Indoor Objects Dataset  25 
+6.6 Traffic Lights Dataset  25 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+  
+iii 
+  
+1. SURVEY  
+1.1 Field Survey  
+The field survey of MoveFree  was carried out to make our smart glass technology more 
+realistic in accordance with the challenges that the visually impaired face. We carried out 
+this survey to cover the needs of our product development by gaining insights from more 
+than 75 participant s to make sure that we are working with empathy in our product 
+development. We tried to identify key challenges in adopting new technology.  
+ 
+Purpose and Intent  
+Becoming a bridge between what is possible through technology and what is experience 
+for visually impaired people was our overriding intent. Understanding people’s day -to-day 
+experiences, from dealing with public spaces to digital information, is crucial f or creating 
+MoveFree on a foundation that is rooted in empathy and utility.  
+ 
+Research Objectives  
+The research aims to examine three key areas through the survey process. They include 
+identification of the most challenging areas, such as orientation and recognition; areas that 
+create barriers for users, including cost and usability; and evaluation of d esired features, 
+including speech input and the capability to operate offline.  
+ 
+Key findings and insights  
+• The data painted a clear direction for developing the device:  
+• The biggest problem is navigation, faced by 75% of the respondents while trying to 
+move around unfamiliar places.  
+• Affordability is one of the main hindrances; 88.3% of the participants responded that 
+they were very concerned about high costs, while 64.9% rated the pricing as very 
+important.  
+• They want reliability, and for the application or the web to be able to work offline, 
+which for 75.3% of users is an essential feature.  
+• Simple interaction is preferred, as 87% of users chose voice commands and 63.6% 
+selected gesture controls as their preferred input methods.  
+  
+ 1.2 Literature Survey  
+ 
+Title: Smart Glass System Using Deep Learning for the Blind and Visually 
+Impaired[4] 
+Author s: Mukhriddin Mukhiddinov, Jinsoo Cho  
+Technology Used:  Uses deep learning for low -light enhancement and object detection. 
+Smart glasses send images via Bluetooth to a phone, which processes data on an AI server. 
+Includes TTS for reading text and tactile graphics for object recognition.  
+Features:  Enhances low -light images for better night navigation. Detects 133 objects and 
+provides real -time audio feedback. Supports salient object detection and generates tactile 
+graphics. Converts printed text to speech for accessibility.  
+Limitations:  GPS navigation, live streaming, and ultrasonic sensors. Relies only on 
+cameras, which may fail in low -light or foggy conditions. No traffic light or vehicle 
+detection for safe road crossings. No voice commands for mode switching.  
+ 
+Title: An Innovative Smart Glass for Blind People Using AI[5] 
+Author s: Shantappa G. Gollagi, Kalyan Devappa Bamane, Dipali Manish Patil, Sanjay B. 
+Ankali, Bahubali M. Akiwate  
+Technology Used:  Uses computer vision, deep learning, and sensor fusion. Employs OCR 
+for text recognition, sonar sensors for obstacle detection, and AI for object recognition. 
+Navigation uses RFID and QR codes, with voice commands for control.  
+Features:  Reads and converts text to speech, detects obstacles using sonar and AI, and 
+recognizes objects via a live video feed. Provides navigation assistance through RFID and 
+QR scanning, with voice commands for hands -free use.  
+Limitations:  Limited text detection range (40 -150 cm), poor performance in low light, 
+supports only English, slow processing, and reduced accuracy for close obstacles.  
+ 
+ 
+ 
+ 
+ Title: Smart Cane for the Visually Impaired[6] 
+Author s: Singh Vaibhav, Paul Rohan  
+Technology Used:  Uses ultrasonic sensors for obstacle detection, vibratory feedback for 
+alerts, and a rechargeable battery with dual indoor -outdoor modes.  
+Features:  It extends detection above knee level, provides haptic feedback, and is 
+affordable, lightweight, and detachable, operates in short -range (≤1m) and long -range 
+(≤3m) modes.  
+Limitations:  Lacks object recognition, text reading, audio feedback, and navigation 
+assistance, struggles in low light, and requires user training.  
+ 
+Title: Review of Navigation Assistive Tools and Technologies for the Visually 
+Impaired[7] 
+Author s: Mohamed Dhiaeddine Messaoudi, Bob -Antoine J Menelas, Hamid Mcheick  
+Technology Used:  Uses Wi -Fi, Bluetooth, GPS, and ZigBee for localization, ultrasonic 
+sensors and cameras for obstacle detection, and machine learning for improved navigation.  
+Features:  Provides indoor and outdoor navigation, integrates multiple localization 
+technologies, offers real -time obstacle detection, and utilizes haptic/audio feedback for 
+user guidance.  
+Limitations:  GPS struggles indoors, Wi -Fi consumes high power, Bluetooth has a short 
+range, ultrasonic sensors require a clear line of sight, and camera -based systems need high 
+computation.  
+ 
+Title: Smart Glasses: A Visual Assistant for the Blind  
+Author s: Simra Nazim, Saba Firdous, Swaroop Ramaswamy Pillai, Vinod Kumar Shukla  
+Technology Used:  Raspberry Pi 3 for processing, camera module for image capture, 
+Tesseract OCR for text recognition, YOLO for object detection, gTTS for text -to-speech, 
+and ultrasonic & IR sensors for obstacle detection. Output via earphones.  
+Features:  Real-time text -to-speech, object detection, and obstacle alerts. Hands -free audio 
+feedback, grayscale image processing for speed, and a portable smart glass design for 
+navigation assistance.  
+ Limitations:  Limited text detection range (150 cm), manual mode switching, slow 
+processing, short obstacle detection range (2 -4m), and unoptimized comfort for long -term 
+wear.  
+ 
+Title: Achieving Eco -Innovative Smart Glass Design with the Integration of Opinion 
+Mining, QFD, and TRIZ  
+Author s: C. K. M. Lee, Y. P. Tsang, W. W. Chong, Y. S. Au, J. Y. Liang  
+Technology Used:  The research integrates Text Mining & NLP for customer insights, 
+QFD for mapping user needs to technical features, and TRIZ to resolve design conflicts. 
+Machine Learning & AI analyze sentiment trends, while Web Scraping (Selenium & 
+NLTK) gathers online re views.  
+Features:  Key innovations include AI -driven customer insights, sustainable modular 
+design, and TRIZ -based problem -solving for smart glass enhancements. Customizable 
+adaptive features and eco -friendly battery technology improve durability and user 
+experience.  
+Limitations:  Challenges include dependency on biased user reviews, high development 
+costs, complex TRIZ implementation, slow market adoption, and limited dataset scope for 
+design improvements.  
+ 
+Title: The white cane and beyond  
+Author s: Bryan Wolynski, OD, FAAO Shanell Matos  
+Technology Used:  Uses Oko app in iPhone’s camera for traffic signals through sound and 
+haptic feedback. It uses NaviLens to get auditory information about the place. Uses 
+Bluetooth and RFID for indoor navigation. Uses LiDAR technology for navigation.  
+Features:  Provides indoor and outdoor navigation, provides haptics and auditory signals 
+for navigation. provide real -time traffic signal status  
+Limitations:  Oko app: Requires a smartphone, drains battery quickly, and may not be 
+compatible with all traffic signals. Indoor Navigation is limited by infrastructure. Not all 
+public places are equipped with NaviLens signage.  
+ 
+ 
+ 
+ 1.3 Outcome of the Survey  
+1. Integration of AI and Deep Learning  
+• Integration of AI and Deep Learning is a consistent trend across recent assistive 
+technologies. Systems using deep learning (e.g., for object detection and low -light 
+enhancement) provide greater contextual understanding of the environment, 
+showing potentia l to significantly improve the mobility and safety of visually 
+impaired users.  
+2. Multimodal Feedback  
+• Multimodal Feedback (audio, haptic, tactile) is crucial for usability. Devices that 
+combine audio (TTS), haptic (vibration), and tactile (graphics or touch interfaces) 
+offer more intuitive and safer user experiences. However, not all systems implement 
+these modalities together.  
+3. Object Detection and Text Recognition  
+• Object Detection and Text Recognition are standard in smart glasses, yet they often 
+suffer from:  
+• Limited recognition range (typically <1.5 meters).  
+• Poor performance under low -light or complex backgrounds.  
+• Slow or server -dependent processing (reducing real -time usability).  
+4. Obstacle Detection  
+• Obstacle Detection using ultrasonic or sonar sensors is common in smart canes and 
+hybrid glasses, but such systems:  
+• Have limited range and directionality.  
+• Require user training.  
+• Struggle to detect complex or dynamic obstacles like vehicles or people.  
+5. Navigation Support  
+• Navigation Support remains fragmented:  
+• RFID and QR code -based indoor navigation is promising but requires pre -installed 
+infrastructure.  
+• GPS is useful for outdoor use but unreliable indoors and in dense environments.  
+• Systems using Bluetooth and Wi -Fi for positioning face range and power 
+limitations.  
+ 6. Voice Control and Hands -Free Interaction  
+• Voice Control and Hands -Free Interaction are underused. Few systems support 
+voice commands for switching modes or interacting with features, which limits 
+usability for blind users who cannot easily operate buttons or touchscreens.  
+7. Device Comfort, Wearability, and Portability  
+• Device Comfort, Wearability, and Portability are often overlooked in technically 
+capable devices. Some solutions are heavy, require wired connections, or are not 
+ergonomic for long -term use.  
+8. Design Thinking and User -Centered Innovation  
+• Design Thinking and User -Centered Innovation (e.g., through TRIZ, QFD, opinion 
+mining) are beginning to shape future designs. These approaches help align 
+technical features with real user needs, but are not yet widely adopted.  
+9. Gaps and Opportunities Identified  
+• No current system offers an integrated solution with object detection, obstacle 
+sensing, traffic signal recognition, navigation, and text reading in one package.  
+• Low-light and weather -affected environments remain challenging across most 
+systems.  
+• There is a lack of multi -language support and real -time, offline processing 
+capabilities.  
+• Most systems rely on internet connectivity, which may not be available in all user 
+environments.  
+• Many systems are designed for English -speaking users, ignoring broader linguistic 
+accessibility.  
+  
+ 2. NEED OF THE PRODUCT  
+ 
+2.1 Introduction to MoveFree  
+MoveFree  is an AI -powered wearable navigation assistant designed to empower visually 
+impaired individuals with greater independence and safety during outdoor movement. By 
+integrating smart obstacle detection, real -time navigation, and AI -driven assistance into a 
+compact wearable system, MoveFree enhances spatial awareness and reduces dependency 
+on caregivers.  
+The system consists of two main components:  
+1. A belt -mounted processing unit that houses sensors (ultrasonic and camera), power 
+supply, and the onboard AI model.  
+2. Smart glasses equipped with a front -facing camera and audio output, allowing for 
+both live perception and real -time feedback.  
+MoveFree detects obstacles such as potholes, vehicles, or pedestrians, reads nearby text 
+aloud, navigates using GPS, and even streams live video/audio to a caregiver if needed.  
+ 
+Need for the Product  
+India alone has over 12 million visually impaired people, many of whom face daily 
+challenges navigating uneven roads, unmarked pathways, and fast -moving traffic. 
+Traditional tools like white canes or guide dogs provide limited environmental awareness, 
+especially in crowded or complex terrains.  
+Current commercial solutions either:  
+• Lack real -time obstacle classification (e.g., potholes),  
+• Are prohibitively expensive (e.g., WeWalk 2.0),  
+• Or are not available in Indian markets.  
+MoveFree addresses this gap by offering:  
+• Affordable, localized obstacle detection (starting with potholes),  
+• Real-time auditory guidance,  
+• GPS-enabled voice navigation,  
+• Edge deployment for portability,  
+• A scalable system with AI -enhanced safety features.  
+ It aims to bridge the accessibility gap through intelligent, context -aware mobility support, 
+making independent travel safer and more achievable for the visually impaired.  
+ 
+2.2 Analysis of Existing systems  
+1) Envision  
+Overview:  
+Envision Glasses are a transformative assistive technology designed to empower people 
+who are blind or have low vision by providing seamless, real -time access to visual 
+information through spoken descriptions and interactive AI. Rather than simply deliveri ng 
+raw data, these glasses translate the visual world into meaningful knowledge, enabling 
+users to navigate daily life with greater independence and confidence.  
+ 
+Key Features:  
+• Instant Text:  Immediately reads aloud any text that appears in front of you for 
+quick access to signs, labels, and menus.  
+• Scan Text:  Reads longer documents or multi -page texts out loud in multiple 
+languages with accurate layout detection  
+• Detect Light:  Identifies the intensity and direction of light sources to aid spatial 
+awareness  
+• Detect Colo urs: Identifies and names the colors of objects in view.  
+• Find People:  Alerts users when people are nearby and can recognize familiar faces 
+after being taught  
+• Voice Control:  Operate all functions hands -free using voice commands for ease of 
+use 
+• Multi -language Support:  Reads text in over 60 languages with automatic language 
+detection  
+ 
+Disadvantages:  
+• Limited Frame Options: Existing users of prescription glasses may find the limited 
+choice of frames restrictive, as the device currently offers only a simple, lens -free 
+titanium frame or a few designer frames.  
+ • Learning Curve and Interface Sensitivity: The touchpad controls can be overly 
+sensitive or inconsistent, particularly for two -finger gestures, which may cause 
+frustration and require practice to master.  
+• Performance Issues in Low Light: The glasses struggle to read text or recognize 
+objects accurately in dim lighting conditions, which can reduce their effectiveness 
+in many real -world scenarios like restaurants or evening outings  
+• Price vs. Benefit:  Some users feel the cost is high relative to the benefits they 
+personally receive, emphasizing the importance of trying the device before 
+purchasing  
+ 
+Learnings:  
+• Better Controls Improve Ease of Use:  Making the device more responsive to 
+touch and adding other control options like advanced voice commands can make it 
+easier for users to learn and use.  
+• Works Well in All Lighting:  Improving how the device performs in low -light or 
+very bright places —using better sensors or smarter AI —will help users rely on it 
+more throughout the day.           
+• Smart Battery Use and Quick Start:  MoveFree should save battery when not in 
+use but still be ready to start instantly —audio cues when turning on can make it feel 
+smoother and more helpful.           
+• Recognizing More Objects Helps Users More:  Adding more types of objects the 
+device can recognize, and allowing it to use multiple features (like navigation and 
+object detection) at the same time, can give users a richer experience.    
+• Affordable and Easy to Try:  Letting people try MoveFree with rental or trial plans 
+can help them understand its value before buying, making it more accessible.  
+   
+2) WeWALK  
+Overview:  
+WeWALK  Smart Cane 2.0 is an innovative mobility aid designed to significantly enhance 
+the independence and safety of people who are visually impaired. It reimagines the 
+traditional white cane by integrating intelligent assistance that goes beyond simple obstacle  
+detection. This smart cane acts as a reliable companion, providing users with real -time 
+information about their environment to help them navigate more confidently and 
+efficiently.  
+  
+Key Features:  
+• Enhanced Obstacle Detection: Alerts users to overhead and waist -level obstacles 
+through haptic (vibration) and audible feedback, improving safety beyond 
+traditional cane capabilities . 
+• Intelligent Voice Assistant: Provides voice -activated assistance for queries, 
+directions, and travel tips, powered by AI and accessible directly from the cane.  
+• Seamless Connectivity: Connects via Bluetooth to smartphones and headphones, 
+enabling hands -free operation and integration with navigation apps.     
+• Accessible Navigation: Offers turn -by-turn GPS navigation with multimodal 
+instructions tailored for blind and low vision users, including clock directions and 
+destination tracking   
+ 
+Disadvantages:  
+• Weight and Ergonomics:  The cane is often perceived as heavy and bulky, 
+especially compared to traditional white canes, causing hand fatigue and discomfort 
+during extended use.        
+• Slippery Handle Grip:  The handle can become slippery, particularly when the 
+user’s hand is sweaty, increasing the risk of dropping the cane.     
+• Vibration Feedback Issues:  Continuous vibrations from walking on certain 
+surfaces (like sidewalks) can cause hand tingling and make it difficult to distinguish 
+obstacle alerts, reducing effectiveness of haptic feedback.    
+• Sensitivity and Accidental Commands:  The cane’s controls sometimes trigger 
+unintended commands or are overly sensitive, which can frustrate users and 
+interrupt navigation.   
+• Limited Compatibility with Cane Types:  The device does not attach to all popular 
+cane types preferred by users, such as lightweight, rigid canes with metal tips, 
+limiting user choice and customization       
+• Audio Volume and Clarity:  The built -in speaker’s volume may be insufficient in 
+noisy environments, making navigation instructions hard to hear, especially near 
+traffic or in crowded areas  
+ 
+Learnings:  
+ • Smart Features Increase Independence:  MoveFree , which attaches to regular 
+glasses, helps visually impaired people move around more freely and confidently 
+by using smart technology.         
+• Comfort and Ease of Use Matter:  Even with advanced features like face detection 
+and haptic feedback, the device must be lightweight, comfortable, and easy to use 
+every day.   
+• Works Without Internet When Needed:  Although internet is needed for things 
+like Google Maps, important safety features like obstacle detection and vibration 
+alerts still work offline, which is important for user trust .   
+• Helpful Feedback for Better Awareness:  MoveFree gives clear audio instructions 
+and gentle vibrations, helping users understand their surroundings even in noisy or 
+busy places.  
+• App and Transit Integration Makes Travel Easier:  By connecting with phone 
+apps and real -time transit info, MoveFree helps users plan routes and travel more 
+easily on their own.  
+ 
+ 
+2.3 Applications of the product  
+1. Navigation Assistance for the Visually Impaired  
+MoveFree  provides real -time voice -guided navigation using GPS and obstacle 
+detection, helping visually impaired individuals walk safely in unfamiliar 
+environments.  
+2. Pothole and Obstacle Detection  
+The AI model detects road -level obstacles like potholes, uneven surfaces, and 
+physical barriers —critical for safety on Indian roads and footpaths.  
+3. Text Reading & Scene Understanding  
+MoveFree can read signboards, shop names, and street signs aloud using OCR 
+(Optical Character Recognition), improving spatial awareness.  
+4. Traffic Signal and Vehicle Detection for Road Crossing  
+Using the front camera, the system detects traffic lights and moving vehicles, warning 
+users when it's unsafe to cross.  
+ 5. Live Streaming to Guardians/Caregivers  
+In emergency or high -risk situations, the system streams live video and audio to a 
+connected mobile app, enabling remote assistance by family or caregivers.  
+6. Personal AI Assistant for Voice Commands  
+Integration with AI assistants (like ChatGPT, Google Assistant) allows users to ask 
+questions, request directions, or control the device via voice.  
+7. Indoor Navigation  
+MoveFree can help users navigate complex indoor areas like malls, railway stations, 
+or airports.  
+8. Fall Detection and Alert System  
+Sensors can detect a sudden fall or abrupt stop, triggering emergency notifications 
+with live location and video to a pre -registered contact.  
+9. Educational & Workplace Inclusion  
+By enabling safer and more independent movement, MoveFree facilitates greater 
+access to schools, colleges, and workplaces for visually impaired users.  
+10. Smart City Integration  
+MoveFree can integrate with smart city infrastructure for enhanced services like real -
+time path updates, rest area detection, or automated emergency routing.  
+  
+ 3. PROBLEM FORMULATION  
+ 
+3.1 Problem Formulation  
+MoveFree addresses the challenge of safe, independent navigation for visually impaired 
+individuals in dynamic and unstructured environments. It provides real -time obstacle 
+detection using ultrasonic sensors and an AI -powered vision system (YOLOv8), 
+deliver ing timely voice alerts to avoid collisions. Additionally, the system supports 
+voice -command control, point -to-point GPS navigation, and live video + location 
+sharing with family members for enhanced monitoring and support. This empowers 
+users to move with  confidence in public spaces, reducing dependence on others.  
+ 
+3.2 Product Objectives  
+• Real -Time Obstacle Detection: Detect static and dynamic objects (like potholes, 
+poles, people, vehicles) using ultrasonic sensors and a YOLOv8 -based object 
+detection model, and provide audio alerts.  
+• Voice -Based Navigation: Allow users to specify destinations via voice input and 
+navigate turn -by-turn using Google Maps, with voice guidance.  
+• Live Location & Video Streaming: Enable family members to monitor the user’s 
+location and POV video in real time via a connected mobile app for safety and 
+assistance.  
+• Text Recognition & Read -Aloud (Planned): Use OCR to read text from 
+surroundings (signboards, directions) and convert it to speech.  
+• Smart Road Crossing (Planned): Detect traffic lights and vehicle movement using 
+the front camera and warn the user when unsafe to cross.  
+ 
+3.3 Applications of the Product  
+• Urban Navigation: Guides users through crowded streets, detects potholes and 
+curbs, and assists in safe road crossings using audio alerts.  
+• Public Transport: Helps users locate bus stops, train platforms, and alerts them 
+when moving vehicles or platforms are near.  
+• Home -to-Destination Navigation: Offers complete voice -controlled point -A to 
+point -B GPS navigation with continuous feedback.  
+• Safety Monitoring: Real-time streaming of user’s live POV and location to 
+caregivers provides peace of mind and emergency support.  
+• Educational & Workplace Access: Enables safer travel to schools, colleges, and 
+offices, promoting inclusivity and independence.  
+ 3.4 Novelty  
+• Multimodal Obstacle Detection:  Uniquely combines ultrasonic sensors with a 
+dual-model computer vision approach —using YOLOv8s[8] for outdoor road 
+hazards (potholes, vehicles) and a specialized YOLOv11m model for complex 
+indoor environments (stairs, doors, furniture).  
+• Clock -Face Guidance System:  Unlike standard "left/right" instructions, 
+MoveFree translates spatial data into intuitive angular directions (e.g., "Door at 2 
+o'clock, 3 meters"), significantly reducing cognitive load for the user.  
+• Generative AI Scene Understanding:  Integrates Google Gemini Flash AI  to 
+provide semantic context. Users can ask natural language questions like "Describe 
+the room" or "Find the empty chair," and receive detailed, context -aware audio 
+descriptions, a feature missing in traditional sensor -based aids.  
+• Real -Time Livestreaming:  Streams the user's camera feed and audio to a mobile 
+app for family members, providing a direct POV of the environment for remote 
+assistance.  
+• Voice -Controlled Smart Navigation:  Accepts destination input via voice, 
+integrates with Google Maps for outdoor routing, and seamlessly switches context 
+for indoor exploration.  
+ 
+3.5 Scope  
+Device Scope  Wearable system combining a belt -
+attached processing unit and smart glasses 
+with a front -facing camera, ultrasonic 
+sensors, and speaker/mic for hands -free 
+navigation.  
+Application Scope  - Urban Navigation:  Detect potholes, 
+poles, people, curbs.  
+- Public Transport:  Identify platforms, 
+detect vehicles, announce stops.  
+- Indoor Navigation:  Navigate malls, 
+stations, and offices using QR markers or 
+indoor mapping.  
+- Smart Road Crossing:  Analyze  traffic 
+lights and vehicle motion to detect 
+crossing safety.  
+Table 3.1 Scope of the Project  
+ 
+ 4. PROPOSED DESIGN  
+ 
+The assistive system for the visually impaired is designed around a modular architecture 
+divided into two physical units: smart glasses and a belt -mounted processing box. This 
+modular division helps in weight distribution, ergonomic wearability, and easier  
+component maintenance or upgrades. The smart glasses include input/output sensory 
+components, while the processing box houses computational and power -intensive units.  
+ 
+ 
+Fig 4.1 Proposed System Architecture  
+ 
+Smart Glasses Module  
+The glasses are equipped with the following components:  
+1. Camera Module (Raspberry Pi Camera v2)  
+• Mounted on the frame, this 8MP wide -angle camera (Sony IMX219 sensor) 
+captures the user's surroundings in real time.  
+• It provides visual data for obstacle detection, traffic light recognition, text 
+reading, and livestreaming.  
+• The data is fed directly to the Jetson Nano for processing.  
+ 
+
+  
+2. Microphone (Adafruit Electret MAX4466)  
+• An omnidirectional microphone captures the user's voice commands and 
+ambient sounds.  
+• This input is crucial for voice -based navigation and interaction with AI 
+assistants.  
+3. Bone Conduction Headphones  
+• These allow the user to receive audio feedback, such as navigation prompts, 
+obstacle alerts, or text -to-speech output, while keeping the ears free to 
+maintain environmental awareness.  
+• Bluetooth 5.0 ensures wireless, low -latency communication.  
+4. Vibration Motor  
+• Positioned near the temple, the motor provides haptic feedback (e.g., 
+directional alerts, warnings for close objects) to enhance non -verbal 
+awareness.  
+ 
+Belt-Mounted Box Module  
+The belt -mounted enclosure houses the processing and communication components. It 
+includes:  
+1. Jetson Nano (Core Processing Unit) [10] 
+• A powerful AI edge computing platform, the Jetson Nano supports real -time 
+inference using models optimized with PyTorch and TensorRT.  
+• It runs a hybrid architecture: a lightweight YOLOv8s[8] model for outdoor 
+hazard detection and a robust YOLOv11m[8] model for detailed indoor 
+object recognition.  
+• It processes inputs from the camera and sensors to execute the Clock -Face 
+Guidance Algorithm, translating bounding box coordinates into relative 
+clock positions for the user.  
+2. Power Supply  
+• A rechargeable 5V –12V battery pack powers the system with an estimated 
+backup of 4 –5 hours based on the processing load.  
+3. Cooling System  
+• A small fan or passive heatsink is added to prevent thermal throttling during 
+heavy computation.  
+4. Storage (SD Card or External SSD)  
+• Storage is used for logging data, storing AI models, and managing offline 
+TTS software like Coqui TTS or pyttsx3.  
+ 5. Wi-Fi + Bluetooth Module  
+• Enables livestreaming, cloud sync, and low -latency communication with the 
+Google Gemini API for generating real -time scene descriptions (e.g., reading 
+text, identifying surroundings).  
+6. Ultrasonic Sensors (3 Units - Left, Center, Right)  
+• Each sensor has a range of 2 cm to 400 cm with ±3 mm accuracy.  
+• These sensors help in detecting obstacles and determining safe paths through 
+triangulated input.  
+7. u-blox NEO -6M GPS Module  
+• This compact GPS module with 2.5 m accuracy is used for point -to-point 
+navigation and location sharing with family members.  
+• It connects via UART and supports external antennas for better reception.  
+Interconnectivity and Functionality  
+The entire system is controlled by the Jetson Nano, which acts as the brain of the project. 
+Sensor inputs from the ultrasonic modules and the GPS module, along with image and 
+audio inputs from the camera and microphone, are processed to perform AI -based de cision -
+making. Outputs are provided via speech (text -to-speech), livestream (via Wi -Fi), and 
+haptic or audio feedback (via headphones and motors). All components are connected via 
+standard GPIO, USB, and UART interfaces, as illustrated in the block diagram . 
+ 
+ 
+Fig 4.2 Block Diagram of Hardware Components  
+
+ 5. IMPLEMENTATION  
+ 
+Model Implementation in MoveFree  
+5.1. Outdoor Model Implementation  
+1. Objective  
+To accurately detect obstacles (starting with potholes) in real -time for visually impaired 
+users, using a lightweight and efficient object detection model deployed on portable 
+hardware.  
+2. Model Selection  
+• Model Used: YOLOv8s (Ultralytics)  
+• Why YOLOv8s?  
+o Lightweight architecture (11.1M parameters)  
+o Fast inference (29.05 ms/image ≈ 34 FPS)  
+o Ideal for real -time edge deployment (Jetson Nano, Raspberry Pi + Coral, 
+etc.) 
+o Robust performance on small custom datasets  
+3. Dataset Details  
+• Type: Custom -labeled dataset focused on detecting potholes  
+• Total Images: 1,595  
+• Total Instances: ~3,500  
+• Labeling Tool: Roboflow  
+• Split:  
+o Training: 1,395 images (87%)  
+o Validation: 133 images (8%)  
+o Testing: 67 images (4%)  
+• Format: YOLOv8 -compatible (image + .txt annotations)  
+4. Data Augmentation  
+Applied using Roboflow and Ultralytics pipeline:  
+• Color Augmentations:  
+o HSV: h=0.015, s=0.5, v=0.4  
+• Geometric Transformations:  
+ o translate=0.1, scale=0.3, shear=0.01, degrees=0.1  
+• Others:  
+o perspective=0.0002, fliplr=0.5  
+o mosaic=0.8, auto_augment='randaugment'  
+5. Training Details  
+• Epochs: 40  
+• Hardware: Tesla T4 GPU (Colab Pro)  
+• Framework: Ultralytics YOLOv8.3.127  
+• Caching: Enabled for faster preprocessing  
+6. Evaluation Metrics  
+Metric  Validation Set  Test Set  
+Precision  72.5%  84.98%  
+Recall  69.4%  64.78%  
+mAP@0.5  73.85%  76.69%  
+mAP@0.5:0.95  43.95%  49.79%  
+Speed  ~29.05 ms/img   
+Table  5.1 Evaluation Metrics  
+ 
+7. Model Storage  
+• Saved Weights:  
+o best.pt (highest mAP)  
+o last.pt (final epoch)  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 8. Sample Output Screenshots  
+ 
+Fig 5.1 Pothole Detection  
+  
+ 
+Fig 5.2 Pothole Detection  
+ 
+ 
+ 
+ 
+5.2. Indoor Model Implementation (Obstacle & Hazard Detection)  
+1. Objective  
+To enable safe indoor navigation by detecting structural elements (stairs, doors) and 
+furniture with high precision, while providing semantic understanding of the 
+environment.  
+
+ 2. Model Selection  
+• Model Used:  YOLOv11m (Medium)  
+• Why YOLOv11m?  
+o Superior accuracy for detecting complex indoor classes compared to 
+nano/small models.  
+o Optimized for identifying safety -critical hazards like "Stairs" and "Doors" 
+which require high recall.  
+o Fine-tuned to handle varying indoor lighting conditions and occlusion.  
+3. Dataset Details  
+• Composition:  A massive composite dataset of ~52,000 images  was curated by 
+merging five open -source datasets:  
+o HomeObjects -3K (Common furniture)  
+o Kaggle Indoor Object Detection  (General obstacles)  
+o Door/Window/Stairs Dataset  (Structural elements)  
+o VisionGuard  (Blind -assistive specific objects)  
+o Doors & Stairs YOLO  (Specialized detection)  
+• Classes (19 Total):  Bed, Sofa, Chair, Table, Lamp, TV, Laptop, Wardrobe, 
+Window, Door, Potted Plant, Photo Frame, Person, Stairs, Trash Can, Shoe, 
+Cabinet, Shelf, Refrigerator.  
+4. Training & Optimization  
+• Augmentation:  Utilized Mosaic augmentation (1.0), MixUp (0.15), and rotation 
+(+/- 15 degrees) to simulate the natural head movement and camera jitter associated 
+with wearable devices.  
+• Performance:  The indoor model achieved exceptional reliability on safety -critical 
+classes:  
+o Stairs:  95.0% mAP (Critical for fall prevention)  
+o Person:  95.6% mAP  
+o Shoe:  96.5% mAP (Trip hazard detection)  
+5. Advanced Features Implementation  
+• Clock -Face Guidance:  A custom algorithm maps the center -point ($x, y$) of 
+detected bounding boxes to a clock sector (1 –12) relative to the user's field of view.  
+• Generative AI Integration:  The system captures frames on voice command 
+("Describe scene") and transmits them to the Google Gemini Flash  endpoint to 
+generate descriptive audio summaries, bridging the gap between simple object 
+detection and full scene understanding.  
+ 
+ 6. EXPERIMENTATION & RESULTS  
+6.1 Data sets 
+1) Potholes:  
+https://www.kaggle.com/datasets/andrewmvd/pothole -detection?select=annotations  
+ 
+Fig 6.1 Pothole Dataset  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 2) Footpath:   
+https://universe.roboflow.com/vendor/footpath -guide -2/dataset/6  
+ 
+Fig 6.2 Footpath Dataset  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 3) Car Object:  
+https://www.kaggle.com/datasets/sshikamaru/car -object -detection?resource=download  
+ 
+Fig 6.3 Car Object Dataset  
+ 
+4) Human Face:  
+https://www.kaggle.com/datasets/sbaghbidi/human -faces -object -detection?select=images  
+ 
+Fig 6.4 Human Face Dataset  
+
+ 5) Indoor Objects:  
+https://www.kaggle.com/datasets/thepbordin/indoor -object -detection  
+  
+Fig 6.5 Indoor Objects Dataset  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 6) Traffic Lights:  
+https://universe.roboflow.com/yolov801/trafik_isiklari -g02mg  
+ 
+Fig 6.6 Traffic Lights Dataset  
+6.2 Test Cases  
+1. Obstacle Detection – Ultrasonic Sensor  
+Test Case ID  TC_OBD_01  
+Description  Test obstacle detection using ultrasonic sensor  
+Input  Place object at 40 cm in front of user  
+Expected Output  Voice alert: “Obstacle ahead at 40 cm”  
+Pass Criteria  Audio alert plays within 1 second  
+Table 6.1 Obstacle Detection Ultrasonic Sensors Test Case  
+ 
+ 
+ 
+ 
+ 
+
+ 2. Obstacle Detection – YOLOv8 Vision Model  
+Test Case ID  TC_YOLO_01  
+Description  Test pothole detection using camera and YOLOv8  
+Input  Feed pothole image/video in front of camera  
+Expected Output  Audio alert: “Pothole ahead”  
+Pass Criteria  Model detects pothole and generates alert in real time  
+Table 6.2  Obstacle Detection Yolo Test Case  
+ 
+3. Voice Command – Destination Input  
+Test Case ID  TC_VC_01  
+Description  Accept destination from user via voice  
+Input  User says “Navigate to Dadar Station”  
+Expected Output  Confirmation: “Navigating to Dadar Station”  
+Pass Criteria  System correctly identifies place and starts navigation  
+Table 6.3 Voice Command Test Case  
+4. Navigation via Google Maps  
+Test Case ID  TC_NAV_01  
+Description  Start point -to-point navigation  
+Input  Start at Location A, set Location B  
+Expected Output  Turn -by-turn voice navigation  
+Pass Criteria  Accurate navigation route with appropriate voice prompts  
+Table 6.4 Navigation Test Case  
+ 
+ 
+ 5. Livestreaming to Family App  
+Test Case ID  TC_LIVE_01  
+Description  Start livestream of user POV to connected app  
+Input  Activate streaming on device  
+Expected Output  Video and audio visible in app in real time  
+Pass Criteria  Delay < 3 seconds, stream stable for at least 5 minutes  
+Table 6.5 Livestreaming Test Case  
+ 
+6. Live Location Sharing  
+Test Case ID  TC_LOC_01  
+Description  Share live GPS location with connected mobile app  
+Input  User starts moving with device on  
+Expected Output  Real-time location updated on app  
+Pass Criteria  Location syncs every 3 –5 seconds on map  
+Table 6.6 Live Location Sharing Test Case  
+ 
+7. Battery and Power Status  
+Test Case ID  TC_PWR_01  
+Description  Test behavio ur on low battery condition  
+Input  Device battery drops below 10%  
+Expected Output  Voice alert: “Battery low, please charge”  
+Pass Criteria  Alert plays and system begins power saving mode  
+Table 6.7 Battery and Power Test Case  
+ 
+ 8. System Boot and Connectivity Check  
+Test Case ID  TC_BOOT_01  
+Description  Ensure device boots properly and all modules initialize  
+Input  Turn on device  
+Expected Output  Voice: “System initialized and ready”  
+Pass Criteria  All sensors, camera, and network initialize without error  
+Table 6.8 System Boot and Connectivity Test Case  
+ 
+9. Road Crossing Detection  
+Test Case ID  TC_RC_01  
+Description  Check detection of red/green light and vehicle movement  
+Input  Simulated traffic light and vehicle movement  
+Expected Output  Voice alert: “Unsafe to cross” or “You may cross”  
+Pass Criteria  Correct alert based on light and traffic conditions  
+Table 6.9 Road Crossing Detection Test Case  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 7. REFERENCES / BIBLIOGRAPHY  
+ 
+[1] World Health Organization.  (2019). World report on vision . 
+https://www.who.int/publications/i/item/world -report -on-vision  
+[2] Zhang, J., et al.  (2022). Computer Vision for Assistive Technologies . PMC. 
+https://pmc.ncbi.nlm.nih.gov/articles/PMC9606951/  
+[3] Liu, Y., et al.  (2021). YOLO -based Object Detection for the Visually Impaired . 
+Electronics. https://www.mdpi.com/2079 -9292/10/22/2756  
+[4] Mukhriddin Mukhiddinov, Jinsoo Cho.  Smart Glass System Using Deep Learning 
+for the Blind and Visually Impaired.  Electronics.  
+[5] Shantappa G. Gollagi, et al.  An Innovative Smart Glass for Blind People Using AI.  
+ResearchGate.  
+[6] Singh Vaibhav, Paul Rohan.  Smart Cane for the Visually Impaired.  
+[7] Mohamed Dhiaeddine Messaoudi, et al.  Review of Navigation Assistive Tools and 
+Technologies for the Visually Impaired.  
+[8] Ultralytics.  YOLOv8 & YOLOv11 Documentation.  https://docs.ultralytics.com/  
+[9] Google.  Gemini AI Models.  https://deepmind.google/technologies/gemini/  
+[10] NVIDIA.  Jetson Nano Developer Kit.  https://www.nvidia.com/en -us/autonomous -
+machines/embedded -systems/jetson -nano/product -development/  
+  
+ APPENDIX – A 
+ 
+Field Survey  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+  
+APPENDIX  – B 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Contribution Work done in this week
+1 60004230016 Samyak Vishrani
+2 60004230225 Smit Doshi
+3 60004230171 Sudev Dahitule
+4 60004230019 Yash Manek
+1 60004230016 Samyak Vishrani
+2 60004230225 Smit Doshi
+3 60004230171 Sudev Dahitule
+4 60004230019 Yash Manek
+1 60004230016 Samyak Vishrani
+2 60004230225 Smit Doshi
+3 60004230171 Sudev Dahitule
+4 60004230019 Yash Manek
+1 60004230016 Samyak Vishrani
+2 60004230225 Smit Doshi
+3 60004230171 Sudev Dahitule
+4 60004230019 Yash ManekAnalyzed current model 
+performance, identified error 
+sources, and tested 
+optimization methods to 
+enhance accuracy.Implement additional 
+accuracy-boosting 
+techniques and 
+compare performance 
+across multiple 
+variants.Sr. No.Weekly progressTarget for next week Student SAPID Student Name Supervisor Date 
+Team focused on improving 
+the accuracy of existing 
+models.
+20-09-2025 Dr. Meera Narvekar
+Dr. Meera Narvekar 15-10-2025Started working on research 
+paper.Collected papers from IEEE, 
+Springer, Scopus, and began 
+reviewing methodologies used 
+in prior studies.Deep dive into selected 
+papers and extract 
+techniques applicable 
+to MoveFree.
+Dr. Meera Narvekar 20-11-2025Team started working on 
+the Indoor Navigation 
+model.Explored the fundamentals of 
+indoor navigation, reviewed 
+different model architectures, 
+and began initial setup for 
+experimentation.Continue researching 
+advanced indoor 
+localization techniques 
+and refine the model 
+structure.
+Dr. Meera Narvekar 24-11-2025Created slides summarizing  
+current progress, 
+challenges, and planned 
+improvements.Presenting our work to the 
+mentor to check for any 
+changes that need to be made.

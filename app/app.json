@@ -1,18 +1,54 @@
 {
   "expo": {
-    "name": "MooveFree App",
-    "icon": "./assets/icon.png",
+    "name": "MooveFree",
     "slug": "moovefree-app",
-    "version": "1.0.0",
+    "version": "2.0.0",
     "orientation": "portrait",
-    "platforms": ["ios", "android", "web"],
-    "jsEngine": "hermes",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "MooveFree uses the microphone for Push-to-Talk communication with the visually impaired user.",
+        "NSLocationWhenInUseUsageDescription": "MooveFree needs your location to transmit real-time GPS to the caretaker."
+      }
+    },
     "android": {
-      "package": "com.moovefree.app",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#0A0A0A"
+      },
       "permissions": [
+        "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
-        "ACCESS_FINE_LOCATION"
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ],
+      "package": "com.moovefree.app",
+      "googleServicesFile": "./google-services.json"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-av",
+        {
+          "microphonePermission": "Allow MooveFree to access the microphone for Push-to-Talk."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow MooveFree to access location to transmit GPS coordinates."
+        }
       ]
-    }
+    ]
   }
 }

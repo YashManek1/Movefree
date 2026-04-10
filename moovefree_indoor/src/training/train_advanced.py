@@ -16,7 +16,6 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 class MooveFreeTrainer:
     """
     Complete training pipeline for MooveFree indoor navigation
@@ -31,15 +30,14 @@ class MooveFreeTrainer:
         self.deployment_target = deployment_target
         self.data_yaml = "datasets/moovefree_combined/moovefree.yaml"
 
-        # Model selection based on target
         if deployment_target == "raspberry_pi":
-            self.model_size = "n"  # nano - 3.2M params
-            self.imgsz = 416  # Smaller for RPi5
+            self.model_size = "n"  
+            self.imgsz = 416  
             self.batch = 16
             logger.info("🎯 Target: Raspberry Pi 5 (Prototype)")
             logger.info("📦 Model: YOLOv8n (Optimized for edge)")
-        else:  # jetson
-            self.model_size = "s"  # small - 11.2M params
+        else:  
+            self.model_size = "s"  
             self.imgsz = 640
             self.batch = 32
             logger.info("🎯 Target: Jetson Nano/Orin (Production)")
@@ -47,13 +45,11 @@ class MooveFreeTrainer:
 
         self.model_name = f"yolov8{self.model_size}.pt"
 
-        # Verify dataset
         if not Path(self.data_yaml).exists():
             logger.error(f"❌ Dataset not found: {self.data_yaml}")
             logger.error("Please run: python src/data/merge_datasets.py")
             sys.exit(1)
 
-        # Check GPU
         self.device = 0 if torch.cuda.is_available() else "cpu"
         if self.device == "cpu":
             logger.warning("⚠️ No GPU detected. Training will be VERY slow.")
@@ -68,7 +64,6 @@ class MooveFreeTrainer:
 
         dataset_path = Path(config["path"])
 
-        # Check directories
         for split in ["train", "val", "test"]:
             img_dir = dataset_path / "images" / split
             lbl_dir = dataset_path / "labels" / split
@@ -86,7 +81,6 @@ class MooveFreeTrainer:
                 logger.error(f"❌ No images found in {split} set!")
                 return False
 
-        # Check class count
         num_classes = config.get("nc", len(config.get("names", {})))
         logger.info(f"   Classes: {num_classes}")
 
@@ -110,15 +104,13 @@ class MooveFreeTrainer:
             logger.error("❌ Dataset verification failed. Aborting.")
             return None
 
-        # Load pretrained COCO weights
         model = YOLO(self.model_name)
         logger.info(f"✅ Loaded pretrained {self.model_name}")
 
-        # Training configuration
         train_config = {
             "data": self.data_yaml,
-            "epochs": 100,  # Full training
-            "patience": 15,  # Early stopping
+            "epochs": 100,  
+            "patience": 15,  
             "batch": self.batch,
             "imgsz": self.imgsz,
             "device": self.device,
@@ -126,37 +118,37 @@ class MooveFreeTrainer:
             "project": "runs/detect",
             "name": f"moovefree_indoor_{self.model_size}",
             "exist_ok": True,
-            # Optimization
+
             "optimizer": "AdamW",
-            "lr0": 0.001,  # Initial learning rate
-            "lrf": 0.01,  # Final learning rate
+            "lr0": 0.001,  
+            "lrf": 0.01,  
             "momentum": 0.937,
             "weight_decay": 0.0005,
             "warmup_epochs": 3,
             "warmup_momentum": 0.8,
             "warmup_bias_lr": 0.1,
-            # Augmentation (CRITICAL for indoor scenes)
+
             "hsv_h": 0.015,
             "hsv_s": 0.7,
             "hsv_v": 0.4,
-            "degrees": 10.0,  # Rotation
-            "translate": 0.1,  # Translation
-            "scale": 0.5,  # Scaling
+            "degrees": 10.0,  
+            "translate": 0.1,  
+            "scale": 0.5,  
             "shear": 0.0,
             "perspective": 0.0,
-            "flipud": 0.0,  # No vertical flip (gravity matters indoors)
-            "fliplr": 0.5,  # Horizontal flip OK
-            "mosaic": 1.0,  # Mosaic augmentation
-            "mixup": 0.1,  # MixUp
-            # Validation
+            "flipud": 0.0,  
+            "fliplr": 0.5,  
+            "mosaic": 1.0,  
+            "mixup": 0.1,  
+
             "val": True,
             "save": True,
-            "save_period": -1,  # Save only best/last
-            "cache": False,  # Don't cache (RAM limit)
-            "rect": False,  # No rectangular training
-            "cos_lr": True,  # Cosine LR scheduler
-            "close_mosaic": 10,  # Disable mosaic last 10 epochs
-            # Misc
+            "save_period": -1,  
+            "cache": False,  
+            "rect": False,  
+            "cos_lr": True,  
+            "close_mosaic": 10,  
+
             "verbose": True,
             "seed": 42,
             "deterministic": True,
@@ -168,7 +160,6 @@ class MooveFreeTrainer:
         logger.info(f"   Image Size: {train_config['imgsz']}")
         logger.info(f"   Device: {self.device}")
 
-        # Start training
         logger.info("\n🏋️ Starting training...")
         logger.info("⏱️ Estimated time: 2-3 hours on RTX 3070 Ti Laptop GPU")
 
@@ -194,7 +185,6 @@ class MooveFreeTrainer:
         logger.info("🔄 RESUMING TRAINING")
         logger.info("=" * 60)
 
-        # Auto-detect checkpoint if not provided
         if checkpoint_path is None:
             checkpoint_path = (
                 f"runs/detect/moovefree_indoor_{self.model_size}/weights/last.pt"
@@ -205,7 +195,6 @@ class MooveFreeTrainer:
             logger.error(f"❌ Checkpoint not found: {checkpoint_path}")
             logger.error("Available checkpoints:")
 
-            # List available checkpoints
             runs_dir = Path("runs/detect")
             if runs_dir.exists():
                 for run_path in runs_dir.iterdir():
@@ -216,11 +205,9 @@ class MooveFreeTrainer:
                                 logger.error(f"   {weight_file}")
             return None
 
-        # Load checkpoint
         model = YOLO(checkpoint_path)
         logger.info(f"✅ Loaded checkpoint: {checkpoint_path}")
 
-        # Check which epoch we're resuming from
         try:
             import torch as pt
 
@@ -230,12 +217,11 @@ class MooveFreeTrainer:
         except:
             logger.warning("⚠️ Could not determine start epoch")
 
-        # Resume training
         logger.info("🏋️ Resuming training...")
 
         try:
             results = model.train(
-                resume=True, device=self.device  # KEY: This tells YOLO to resume
+                resume=True, device=self.device  
             )
 
             logger.info("\n✅ Resumed training completed successfully!")
@@ -265,14 +251,12 @@ class MooveFreeTrainer:
             logger.error("❌ Dataset verification failed. Aborting.")
             return None
 
-        # Load existing model
         model = YOLO(base_model_path)
         logger.info(f"✅ Loaded model: {base_model_path}")
 
-        # Fine-tuning configuration (lighter than from-scratch)
         finetune_config = {
             "data": self.data_yaml,
-            "epochs": 30,  # Fewer epochs
+            "epochs": 30,  
             "patience": 8,
             "batch": self.batch,
             "imgsz": self.imgsz,
@@ -281,14 +265,14 @@ class MooveFreeTrainer:
             "project": "runs/detect",
             "name": f"moovefree_finetune_{self.model_size}",
             "exist_ok": True,
-            # Lower learning rate for fine-tuning
+
             "optimizer": "AdamW",
-            "lr0": 0.0003,  # Much lower
+            "lr0": 0.0003,  
             "lrf": 0.01,
             "momentum": 0.937,
             "weight_decay": 0.0005,
             "warmup_epochs": 1,
-            # Lighter augmentation
+
             "hsv_h": 0.01,
             "hsv_s": 0.5,
             "hsv_v": 0.3,
@@ -297,10 +281,10 @@ class MooveFreeTrainer:
             "scale": 0.3,
             "flipud": 0.0,
             "fliplr": 0.5,
-            "mosaic": 0.5,  # Reduced
+            "mosaic": 0.5,  
             "mixup": 0.05,
-            # Freeze backbone (FASTER training)
-            "freeze": 10,  # Freeze first 10 layers
+
+            "freeze": 10,  
             "val": True,
             "save": True,
             "cache": False,
@@ -356,7 +340,6 @@ class MooveFreeTrainer:
             logger.info(f"Recall:       {metrics.box.mr:.4f}")
             logger.info("=" * 60)
 
-            # Check critical classes
             if hasattr(metrics.box, "maps"):
                 critical_classes = {9: "door", 13: "stairs", 12: "person"}
 
@@ -382,16 +365,15 @@ class MooveFreeTrainer:
         model = YOLO(weights_path)
 
         try:
-            # Export to ONNX (universal format)
+
             logger.info("   Exporting to ONNX...")
             model.export(format="onnx", imgsz=self.imgsz, dynamic=False, simplify=True)
 
-            # Export to TFLite (Raspberry Pi optimized)
             logger.info("   Exporting to TFLite (INT8)...")
             model.export(
                 format="tflite",
                 imgsz=self.imgsz,
-                int8=True,  # INT8 quantization for speed
+                int8=True,  
             )
 
             logger.info("\n✅ Export completed!")
@@ -416,23 +398,20 @@ class MooveFreeTrainer:
         import cv2
         import time
 
-        # Create dummy image
         dummy_img = np.random.randint(
             0, 255, (self.imgsz, self.imgsz, 3), dtype=np.uint8
         )
 
-        # Warm-up
         for _ in range(10):
             model(dummy_img, verbose=False)
 
-        # Benchmark
         times = []
         for _ in range(50):
             start = time.time()
             model(dummy_img, verbose=False)
             times.append(time.time() - start)
 
-        avg_time = np.mean(times) * 1000  # Convert to ms
+        avg_time = np.mean(times) * 1000  
         fps = 1000 / avg_time
 
         logger.info(f"   Average inference time: {avg_time:.1f} ms")
@@ -443,7 +422,6 @@ class MooveFreeTrainer:
                 logger.warning("⚠️ FPS below 10. Consider using TFLite export.")
             elif fps >= 15:
                 logger.info("✅ FPS adequate for real-time navigation")
-
 
 def main():
     """Main training workflow"""
@@ -460,7 +438,7 @@ def main():
             "validate",
             "export",
             "benchmark",
-        ],  # Added "resume"
+        ],  
         default="train",
         help="Training mode",
     )
@@ -480,30 +458,28 @@ def main():
 
     args = parser.parse_args()
 
-    # Initialize trainer
     trainer = MooveFreeTrainer(deployment_target=args.target)
 
     if args.mode == "train":
-        # First-time training
+
         results = trainer.train_from_scratch()
 
         if results:
-            # Auto-validate
+
             weights_path = (
                 f"runs/detect/moovefree_indoor_{trainer.model_size}/weights/best.pt"
             )
             trainer.validate(weights_path)
 
-            # Auto-export
             trainer.export_for_deployment(weights_path)
             trainer.benchmark_speed(weights_path)
 
     elif args.mode == "resume":
-        # Resume interrupted training
+
         if args.weights:
             results = trainer.resume_training(args.weights)
         else:
-            # Auto-detect last checkpoint
+
             results = trainer.resume_training()
 
         if results:
@@ -544,7 +520,6 @@ def main():
             logger.error("❌ --weights required for benchmark")
             return
         trainer.benchmark_speed(args.weights)
-
 
 if __name__ == "__main__":
     main()
